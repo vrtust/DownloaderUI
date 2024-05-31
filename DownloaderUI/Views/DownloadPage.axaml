@@ -43,9 +43,8 @@
 			</StackPanel>
 
 			<StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-				<Button Margin="10,0" Width="175" BorderThickness="0.5"  BorderBrush="Black" Background="White" Content="{DynamicResource My.Strings.ChooseFolderOnDownloadPage}" Command="{Binding SelectFolderCommand}">
+				<Button Command="{Binding SelectFolderCommand}">
 					<StackPanel>
-						<!-- IsVisible is not useful because of the {DynamicResource My.Strings.ChooseFolderOnDownloadPage}  -->
 						<TextBlock IsVisible="{Binding !Selected}">
 							<Run Text="{DynamicResource My.Strings.ChooseFolderOnDownloadPage}" />
 						</TextBlock>

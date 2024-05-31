@@ -27,9 +27,15 @@ namespace DownloaderUI.ViewModels
         {
             SelectFolderCommand = ReactiveCommand.CreateFromTask(SelectFolder);
 
-            _ = LoadAsync();
+            Load();
             GetPredefColors();
             _faTheme = App.Current.Styles[0] as FluentAvaloniaTheme;
+
+            if(!string.IsNullOrEmpty(DefaultPath))
+            {
+                Selected = true;
+                GetFreeSpace();
+            }
 
             this.WhenAnyValue(vm => vm.CurrentAppTheme)
                 .Throttle(TimeSpan.FromMilliseconds(200))
@@ -275,6 +281,8 @@ namespace DownloaderUI.ViewModels
             if (result != null)
             {
                 DefaultPath = result;
+                Selected = true;
+                GetFreeSpace();
             }
         }
 
@@ -374,6 +382,44 @@ namespace DownloaderUI.ViewModels
         {
             get => _defaultPath;
             set => this.RaiseAndSetIfChanged(ref _defaultPath, value);
+        }
+
+        private bool _selected;
+        public bool Selected
+        {
+            get => _selected;
+            set => this.RaiseAndSetIfChanged(ref _selected, value);
+        }
+
+        public void GetFreeSpace()
+        {
+            string root = Path.GetPathRoot(DefaultPath);
+
+            DriveInfo drive = new(root);
+            FreeSpace = FormatBytes(drive.AvailableFreeSpace);
+        }
+
+        private string _freeSpace;
+
+        public string FreeSpace
+        {
+            get => _freeSpace;
+            set => this.RaiseAndSetIfChanged(ref _freeSpace, value);
+        }
+
+        public static string FormatBytes(long bytes)
+        {
+            string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
+            int suffixIndex = 0;
+            double formattedValue = bytes;
+
+            while (formattedValue >= 1024 && suffixIndex < suffixes.Length - 1)
+            {
+                formattedValue /= 1024;
+                suffixIndex++;
+            }
+
+            return $"{formattedValue:F3} {suffixes[suffixIndex]}";
         }
 
         // See more in
@@ -691,11 +737,11 @@ namespace DownloaderUI.ViewModels
             await File.WriteAllTextAsync(Path.Combine(DataPath, "Settings.json"), SettingsJson);
         }
 
-        public async Task LoadAsync()
+        public void Load()
         {
             string DataPath = @".\DownloadData";
 
-            string SettingsJson = await File.ReadAllTextAsync(Path.Combine(DataPath, "Settings.json"));
+            string SettingsJson = File.ReadAllText(Path.Combine(DataPath, "Settings.json"));
 
             Settings loadedSettings = JsonConvert.DeserializeObject<Settings>(SettingsJson);
 

@@ -18,7 +18,19 @@
 				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.DefaultPath}"
 										 Description="{DynamicResource My.Strings.DefaultPathDescription}">
 					<ui:SettingsExpanderItem.Footer>
-						<Button Content="{Binding DefaultPath}" Command="{Binding SelectFolderCommand}" />
+						<Button Margin="10,0" Command="{Binding SelectFolderCommand}">
+							<StackPanel>
+								<TextBlock IsVisible="{Binding !Selected}">
+									<Run Text="{DynamicResource My.Strings.ChooseFolderOnDownloadPage}" />
+								</TextBlock>
+
+								<TextBlock IsVisible="{Binding Selected}">
+									<Run Text="{Binding DefaultPath}" />
+									<Run Text="|" />
+									<Run Text="{Binding FreeSpace}" />
+								</TextBlock>
+							</StackPanel>
+						</Button>
 					</ui:SettingsExpanderItem.Footer>
 				</ui:SettingsExpanderItem>
 
