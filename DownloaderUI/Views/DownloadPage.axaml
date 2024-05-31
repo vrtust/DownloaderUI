@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DownloaderUI.Views.DownloadPage"
+			 xmlns:vm="using:DownloaderUI.ViewModels"
+			 x:DataType="vm:DownloadPageViewModel">
+	<ScrollViewer>
+		<Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,30,0,0" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+
+			<StackPanel HorizontalAlignment="Center" Grid.Row="0" Orientation="Horizontal" Margin="5">
+				<TextBox Name="UrlTextBox" Width="555" Watermark="Enter URL" Text="{Binding Url, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap"/>
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center" Width="555" Margin="5">
+				<Label VerticalAlignment="Center" HorizontalAlignment="Center" Width="100" FontSize="18" Content="{DynamicResource My.Strings.FileNameOnDownloadPage}" />
+				<TextBox Width="455" Text="{Binding FileName}" IsReadOnly="True"/>
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Width="555" Margin="5">
+				<Label VerticalAlignment="Center" HorizontalAlignment="Center" Width="100" FontSize="18" Content="{DynamicResource My.Strings.FileSizeOnDownloadPage}" />
+				<TextBox Width="455" Text="{Binding FileSize}" IsReadOnly="True"/>
+			</StackPanel>
+
+			<StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5" Width="555">
+				<Label VerticalAlignment="Center"  FontSize="18" Content="{DynamicResource My.Strings.PathOnDownloadPage}" />
+				<TextBox Margin="20,0,0,0" IsReadOnly="True" Width="493" Text="{Binding SelectedFolder}" />
+
+			</StackPanel>
+
+			<StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+				<Button Margin="10,0" Width="175" BorderThickness="0.5"  BorderBrush="Black" Background="White" Content="{DynamicResource My.Strings.ChooseFolderOnDownloadPage}" Command="{Binding SelectFolderCommand}">
+					<StackPanel>
+						<TextBlock IsVisible="{Binding !Selected}">
+							<Run Text="{DynamicResource My.Strings.ChooseFolderOnDownloadPage}" />
+						</TextBlock>
+
+						<TextBlock IsVisible="{Binding Selected}">
+							<Run Text="{Binding FileSize}" />
+							<Run Text="/" />
+							<Run Text="{Binding FreeSpace}" />
+						</TextBlock>
+					</StackPanel>
+				</Button>
+				<Button Width="175" Content="{DynamicResource My.Strings.ParseOnDownloadPage}" IsEnabled="{Binding PraseUrlEnable}" Command="{Binding ParseUrlCommand}" Margin="10,0"/>
+				<Button Width="175" Content="{DynamicResource My.Strings.DownloadOnDownloadPage}" IsEnabled="{Binding PraseUrlEnable}" Command="{Binding DownloadUrlCommand}" Margin="10,0"/>
+			</StackPanel>
+
+			<StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+				<ToggleButton Margin="10, 0" IsChecked="{Binding IsOpen}">
+					<Panel>
+						<TextBlock Text="{DynamicResource My.Strings.OpenFileAfterDownloadOnDownloadPage}" />
+					</Panel>
+				</ToggleButton>
+				<ToggleButton Margin="10, 0" IsChecked="{Binding IsOpenFolder}">
+					<Panel>
+						<TextBlock Text="{DynamicResource My.Strings.OpenFolderAfterDownloadOnDownloadPage}" />
+					</Panel>
+				</ToggleButton>
+			</StackPanel>
+
+		</Grid>
+	</ScrollViewer>
+
+</UserControl>

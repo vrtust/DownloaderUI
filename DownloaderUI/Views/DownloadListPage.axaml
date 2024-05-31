@@ -1,0 +1,566 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+	x:Class="DownloaderUI.Views.DownloadListPage"
+	xmlns:ui="using:FluentAvalonia.UI.Controls"
+	xmlns:local="clr-namespace:DownloaderUI.Models"
+	xmlns:service="clr-namespace:DownloaderUI.Service"
+	xmlns:vm="using:DownloaderUI.ViewModels"
+	x:DataType="vm:DownloadListPageViewModel">
+
+	<UserControl.Resources>
+		<service:StatusToSvgConverter x:Key="StatusToSvgConverter" />
+		<service:StatusToColorConverter x:Key="StatusToColorConverter" />
+	</UserControl.Resources>
+
+	<TabControl Margin="5">
+		<TabItem>
+			<TabItem.Header>
+				<StackPanel Orientation="Horizontal">
+					<ui:SymbolIcon VerticalAlignment="Center" Symbol="OpenFolder" />
+					<TextBlock FontWeight="Bold" VerticalAlignment="Center" Text="{DynamicResource My.Strings.All}"/>
+				</StackPanel>
+			</TabItem.Header>
+			<Grid Margin="0,5,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+				<StackPanel Orientation="Horizontal">
+					<Button
+						VerticalAlignment="Center"
+						HorizontalAlignment="Center"
+						Classes="accent"
+						Command="{Binding NewLinkCommand}">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+								<ColumnDefinition Width="*"></ColumnDefinition>
+							</Grid.ColumnDefinitions>
+							<ui:SymbolIcon Grid.Column="0" Symbol="Add" Margin="0,0,5,0" />
+							<TextBlock Grid.Column="1" Text="{DynamicResource My.Strings.NewLink}"/>
+						</Grid>
+					</Button>
+					<TextBox Margin="10,0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="{DynamicResource My.Strings.SearchWatermark}" Width="250" />
+				</StackPanel>
+
+				<DataGrid Grid.Row="1"
+					Margin="0,5,0,0"
+					ItemsSource="{Binding DownloadList, Mode=TwoWay}"
+					IsReadOnly="True"
+					GridLinesVisibility="All"
+					CanUserReorderColumns="True"
+					CanUserSortColumns="True"
+					Name="All"
+					SelectedItem="{Binding SelectedDownloadItem}">
+
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileName}" Binding="{Binding FileName}" />
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.Status}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+										<ui:SymbolIcon FontSize="25" Symbol="{Binding Status, Converter={StaticResource StatusToSvgConverter}}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" />
+									</StackPanel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Percentage}"
+							Binding="{Binding ProgressPercentage, StringFormat={}{0:N2}}}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.BytesPerSecondSpeed}" Binding="{Binding BytesPerSecondSpeed}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ReceivedBytesSize}" Binding="{Binding ReceivedBytesSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileSize}" Binding="{Binding FileSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Path}" Binding="{Binding Path}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Url}" Binding="{Binding Url}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ErrorMessage}" Binding="{Binding ExMessage}" />
+
+					</DataGrid.Columns>
+
+					<DataGrid.ContextFlyout>
+						<MenuFlyout>
+							<MenuItem Header="{DynamicResource My.Strings.Open}" Command="{Binding OpenCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFile" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFolder" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Pause}" Command="{Binding PauseCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Pause" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.Resume}" Command="{Binding ResumeCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Play" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.CopyFileName}"  Command="{Binding CopyNameCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyPath}" Command="{Binding CopyPathCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyUrl}" Command="{Binding CopyUrlCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyErrorMessage}" Command="{Binding CopyExMessageCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Delete}" Command="{Binding DeleteCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromList}" Command="{Binding DeleteFromListCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromFile}" Command="{Binding DeleteFromFileCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuFlyout>
+					</DataGrid.ContextFlyout>
+
+				</DataGrid>
+			</Grid>
+		</TabItem>
+		<TabItem>
+			<TabItem.Header>
+				<StackPanel Orientation="Horizontal">
+					<ui:SymbolIcon VerticalAlignment="Center" Symbol="Clock" />
+					<TextBlock FontWeight="Bold" VerticalAlignment="Center" Text="{DynamicResource My.Strings.Downloading}"/>
+				</StackPanel>
+			</TabItem.Header>
+			<Grid Margin="0,5,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+				<StackPanel Orientation="Horizontal">
+					<Button
+						VerticalAlignment="Center"
+						HorizontalAlignment="Center"
+						Classes="accent"
+						Command="{Binding NewLinkCommand}">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+								<ColumnDefinition Width="*"></ColumnDefinition>
+							</Grid.ColumnDefinitions>
+							<ui:SymbolIcon Grid.Column="0" Symbol="Add" Margin="0,0,5,0" />
+							<TextBlock Grid.Column="1" Text="{DynamicResource My.Strings.NewLink}"/>
+						</Grid>
+					</Button>
+					<TextBox Margin="10,0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="{DynamicResource My.Strings.SearchWatermark}" Width="250" />
+				</StackPanel>
+
+				<DataGrid Grid.Row="1"
+					Margin="0,5,0,0"
+					ItemsSource="{Binding DownloadingList, Mode=TwoWay}"
+					IsReadOnly="True"
+					GridLinesVisibility="All"
+					CanUserReorderColumns="True"
+					CanUserSortColumns="True"
+					Name="Downloading"
+					SelectedItem="{Binding SelectedDownloadItem}">
+
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileName}" Binding="{Binding FileName}" />
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.Status}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+										<ui:SymbolIcon FontSize="25" Symbol="{Binding Status, Converter={StaticResource StatusToSvgConverter}}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" />
+									</StackPanel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Percentage}"
+							Binding="{Binding ProgressPercentage, StringFormat={}{0:N2}}}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.BytesPerSecondSpeed}" Binding="{Binding BytesPerSecondSpeed}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ReceivedBytesSize}" Binding="{Binding ReceivedBytesSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileSize}" Binding="{Binding FileSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Path}" Binding="{Binding Path}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Url}" Binding="{Binding Url}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ErrorMessage}" Binding="{Binding ExMessage}" />
+
+					</DataGrid.Columns>
+
+					<DataGrid.ContextFlyout>
+						<MenuFlyout>
+							<MenuItem Header="{DynamicResource My.Strings.Open}" Command="{Binding OpenCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFile" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFolder" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Pause}" Command="{Binding PauseCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Pause" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.Resume}" Command="{Binding ResumeCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Play" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.CopyFileName}"  Command="{Binding CopyNameCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyPath}" Command="{Binding CopyPathCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyUrl}" Command="{Binding CopyUrlCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyErrorMessage}" Command="{Binding CopyExMessageCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Delete}" Command="{Binding DeleteCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromList}" Command="{Binding DeleteFromListCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromFile}" Command="{Binding DeleteFromFileCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuFlyout>
+					</DataGrid.ContextFlyout>
+
+				</DataGrid>
+			</Grid>
+		</TabItem>
+		<TabItem>
+			<TabItem.Header>
+				<StackPanel Orientation="Horizontal">
+					<ui:SymbolIcon VerticalAlignment="Center" Symbol="Accept" />
+					<TextBlock FontWeight="Bold" VerticalAlignment="Center" Text="{DynamicResource My.Strings.Commpleted}"/>
+				</StackPanel>
+			</TabItem.Header>
+			<Grid Margin="0,5,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+				<StackPanel Orientation="Horizontal">
+					<Button
+						VerticalAlignment="Center"
+						HorizontalAlignment="Center"
+						Classes="accent"
+						Command="{Binding NewLinkCommand}">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+								<ColumnDefinition Width="*"></ColumnDefinition>
+							</Grid.ColumnDefinitions>
+							<ui:SymbolIcon Grid.Column="0" Symbol="Add" Margin="0,0,5,0" />
+							<TextBlock Grid.Column="1" Text="{DynamicResource My.Strings.NewLink}"/>
+						</Grid>
+					</Button>
+					<TextBox Margin="10,0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="{DynamicResource My.Strings.SearchWatermark}" Width="250" />
+				</StackPanel>
+
+				<DataGrid Grid.Row="1"
+					Margin="0,5,0,0"
+					ItemsSource="{Binding CompletedList, Mode=TwoWay}"
+					IsReadOnly="True"
+					GridLinesVisibility="All"
+					CanUserReorderColumns="True"
+					CanUserSortColumns="True"
+					Name="Completed"
+					SelectedItem="{Binding SelectedDownloadItem}">
+
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileName}" Binding="{Binding FileName}" />
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.Status}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+										<ui:SymbolIcon FontSize="25" Symbol="{Binding Status, Converter={StaticResource StatusToSvgConverter}}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" />
+									</StackPanel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Percentage}"
+							Binding="{Binding ProgressPercentage, StringFormat={}{0:N2}}}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.BytesPerSecondSpeed}" Binding="{Binding BytesPerSecondSpeed}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ReceivedBytesSize}" Binding="{Binding ReceivedBytesSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileSize}" Binding="{Binding FileSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Path}" Binding="{Binding Path}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Url}" Binding="{Binding Url}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ErrorMessage}" Binding="{Binding ExMessage}" />
+
+					</DataGrid.Columns>
+
+					<DataGrid.ContextFlyout>
+						<MenuFlyout>
+							<MenuItem Header="{DynamicResource My.Strings.Open}" Command="{Binding OpenCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFile" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFolder" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Pause}" Command="{Binding PauseCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Pause" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.Resume}" Command="{Binding ResumeCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Play" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.CopyFileName}"  Command="{Binding CopyNameCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyPath}" Command="{Binding CopyPathCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyUrl}" Command="{Binding CopyUrlCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyErrorMessage}" Command="{Binding CopyExMessageCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Delete}" Command="{Binding DeleteCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromList}" Command="{Binding DeleteFromListCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromFile}" Command="{Binding DeleteFromFileCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuFlyout>
+					</DataGrid.ContextFlyout>
+
+				</DataGrid>
+			</Grid>
+		</TabItem>
+		<TabItem>
+			<TabItem.Header>
+				<StackPanel Orientation="Horizontal">
+					<ui:SymbolIcon VerticalAlignment="Center" Symbol="Clear" />
+					<TextBlock FontWeight="Bold" VerticalAlignment="Center" Text="{DynamicResource My.Strings.Error}"/>
+				</StackPanel>
+			</TabItem.Header>
+			<Grid Margin="0,5,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+				<StackPanel Orientation="Horizontal">
+					<Button
+						VerticalAlignment="Center"
+						HorizontalAlignment="Center"
+						Classes="accent"
+						Command="{Binding NewLinkCommand}">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+								<ColumnDefinition Width="*"></ColumnDefinition>
+							</Grid.ColumnDefinitions>
+							<ui:SymbolIcon Grid.Column="0" Symbol="Add" Margin="0,0,5,0" />
+							<TextBlock Grid.Column="1" Text="{DynamicResource My.Strings.NewLink}"/>
+						</Grid>
+					</Button>
+					<TextBox Margin="10,0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="{DynamicResource My.Strings.SearchWatermark}" Width="250" />
+				</StackPanel>
+
+				<DataGrid Grid.Row="1"
+					Margin="0,5,0,0"
+					ItemsSource="{Binding ErrorList, Mode=TwoWay}"
+					IsReadOnly="True"
+					GridLinesVisibility="All"
+					CanUserReorderColumns="True"
+					CanUserSortColumns="True"
+					Name="Error"
+					SelectedItem="{Binding SelectedDownloadItem}">
+
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileName}" Binding="{Binding FileName}" />
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.Status}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+										<ui:SymbolIcon FontSize="25" Symbol="{Binding Status, Converter={StaticResource StatusToSvgConverter}}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" />
+									</StackPanel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Percentage}"
+							Binding="{Binding ProgressPercentage, StringFormat={}{0:N2}}}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.BytesPerSecondSpeed}" Binding="{Binding BytesPerSecondSpeed}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ReceivedBytesSize}" Binding="{Binding ReceivedBytesSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.FileSize}" Binding="{Binding FileSize}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Path}" Binding="{Binding Path}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.Url}" Binding="{Binding Url}" />
+						<DataGridTextColumn Header="{DynamicResource My.Strings.ErrorMessage}" Binding="{Binding ExMessage}" />
+
+					</DataGrid.Columns>
+
+					<DataGrid.ContextFlyout>
+						<MenuFlyout>
+							<MenuItem Header="{DynamicResource My.Strings.Open}" Command="{Binding OpenCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFile" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="OpenFolder" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Pause}" Command="{Binding PauseCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Pause" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.Resume}" Command="{Binding ResumeCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Play" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.CopyFileName}"  Command="{Binding CopyNameCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyPath}" Command="{Binding CopyPathCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyUrl}" Command="{Binding CopyUrlCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.CopyErrorMessage}" Command="{Binding CopyExMessageCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Copy" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="{DynamicResource My.Strings.Delete}" Command="{Binding DeleteCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromList}" Command="{Binding DeleteFromListCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{DynamicResource My.Strings.DeleteFromFile}" Command="{Binding DeleteFromFileCommand}" >
+								<MenuItem.Icon>
+									<ui:SymbolIcon Symbol="Delete" />
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuFlyout>
+					</DataGrid.ContextFlyout>
+
+				</DataGrid>
+			</Grid>
+		</TabItem>
+
+	</TabControl>
+</UserControl>

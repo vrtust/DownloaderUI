@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:DownloaderUI.Views"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="DownloaderUI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+		xmlns:vm="clr-namespace:DownloaderUI.ViewModels"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="DownloaderUI"
+        ExtendClientAreaToDecorationsHint="True"
+		WindowStartupLocation="CenterScreen"
+		xmlns:ui="using:FluentAvalonia.UI.Controls"
+		xmlns:uip="using:FluentAvalonia.UI.Controls.Primitives">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		<TextBlock Grid.Row="0" Padding="10,5,5,5" FontWeight="Bold" FontSize="18">DownloaderUI</TextBlock>
+		<ui:NavigationView x:Name="MainNavigation" PaneDisplayMode="Left" OpenPaneLength="175" Grid.Row="1" Grid.Column="0">
+			<ui:NavigationView.MenuItems >
+				<ui:NavigationViewItem Content="{DynamicResource My.Strings.DownloadList}" Tag="DownloadListPage" IconSource="List" />
+			</ui:NavigationView.MenuItems>
+		</ui:NavigationView>
+		
+	</Grid>
+
+</Window>
