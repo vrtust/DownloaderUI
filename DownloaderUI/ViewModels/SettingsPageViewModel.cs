@@ -674,8 +674,6 @@ namespace DownloaderUI.ViewModels
             _faTheme.CustomAccentColor = color;
         }
 
-        private bool _ignoreSetListBoxColor = false;
-
         private const string _system = "System";
         private const string _dark = "Dark";
         private const string _light = "Light";
@@ -698,12 +696,9 @@ namespace DownloaderUI.ViewModels
                 Directory.CreateDirectory("./DownloadData");
             }
 
-            if (CurrentFont is null)
-            {
-                CurrentFont = new FontFamily("Default");
-            }
+            CurrentFont ??= new FontFamily("Default");
 
-            Settings settings = new Settings()
+            Settings settings = new()
             {
                 CurrentFontName = CurrentFont.Name,
                 FontSize = FontSize,

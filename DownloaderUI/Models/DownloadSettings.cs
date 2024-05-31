@@ -6,7 +6,7 @@ namespace DownloaderUI.Models
     {
         // Lazy<T> is a class in .NET used for lazy initialization of objects
         // It ensures that the instance is created only when it is first used and is thread-safe
-        private static readonly Lazy<DownloadSettings> _instance = new Lazy<DownloadSettings>(() => new DownloadSettings());
+        private static readonly Lazy<DownloadSettings> _instance = new(() => new DownloadSettings());
 
         // Public static property to get the single instance
         public static DownloadSettings Instance => _instance.Value;

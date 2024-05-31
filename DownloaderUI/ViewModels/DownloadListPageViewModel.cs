@@ -24,7 +24,7 @@ namespace DownloaderUI.ViewModels
 {
     public class DownloadListPageViewModel : ViewModelBase
     {
-        private SourceCache<DownloadItem, Guid> _sourceCache = new(i => i.Id);
+        private readonly SourceCache<DownloadItem, Guid> _sourceCache = new(i => i.Id);
 
         private readonly ReadOnlyObservableCollection<DownloadItem> _downloadList;
         public ReadOnlyObservableCollection<DownloadItem> DownloadList => _downloadList;
@@ -54,7 +54,7 @@ namespace DownloaderUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _downloadCollection, value);
         }
 
-        private Dictionary<string, DownloadCollection> _downloadCollections = new();
+        private Dictionary<string, DownloadCollection> _downloadCollections = [];
 
         public Dictionary<string, DownloadCollection> DownloadCollections
         {
@@ -186,11 +186,13 @@ namespace DownloaderUI.ViewModels
                 }
                 else
                 {
-                    Process proc = new Process();
-                    proc.StartInfo = new ProcessStartInfo()
+                    Process proc = new()
                     {
-                        FileName = SelectedDownloadItem.Path,
-                        UseShellExecute = true
+                        StartInfo = new ProcessStartInfo()
+                        {
+                            FileName = SelectedDownloadItem.Path,
+                            UseShellExecute = true
+                        }
                     };
                     proc.Start();
                 }
@@ -272,9 +274,8 @@ namespace DownloaderUI.ViewModels
         {
             try
             {
-                this.SelectedDownloadItem = SelectedDownloadItem;
-                DownloadCollections.Remove(this.SelectedDownloadItem.FileName);
-                _sourceCache.Remove(this.SelectedDownloadItem);
+                DownloadCollections.Remove(SelectedDownloadItem.FileName);
+                _sourceCache.Remove(SelectedDownloadItem);
                 _sourceCache.Refresh();
                 await SaveAsync();
                 _sourceCache.Refresh();
@@ -494,7 +495,7 @@ namespace DownloaderUI.ViewModels
                                         downloadItem.Status = "Downloading";
                                         downloadItem.Pack = CurrentDownloadService.Package;
                                         _sourceCache.AddOrUpdate(downloadItem);
-                                        DownloadCollection downloadCollection = new DownloadCollection()
+                                        DownloadCollection downloadCollection = new()
                                         {
                                             DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
                                             DownloadService = CurrentDownloadService,
@@ -549,7 +550,7 @@ namespace DownloaderUI.ViewModels
                                 {
                                     downloadItem.Status = "Error";
                                     downloadItem.Pack = CurrentDownloadService.Package;
-                                    DownloadCollection downloadCollection = new DownloadCollection()
+                                    DownloadCollection downloadCollection = new()
                                     {
                                         DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
                                         DownloadService = CurrentDownloadService,
@@ -583,11 +584,13 @@ namespace DownloaderUI.ViewModels
                                     }
                                     else
                                     {
-                                        Process proc = new Process();
-                                        proc.StartInfo = new ProcessStartInfo()
+                                        Process proc = new()
                                         {
-                                            FileName = downloadItem.Path,
-                                            UseShellExecute = true
+                                            StartInfo = new ProcessStartInfo()
+                                            {
+                                                FileName = downloadItem.Path,
+                                                UseShellExecute = true
+                                            }
                                         };
                                         proc.Start();
                                     }
@@ -780,7 +783,7 @@ namespace DownloaderUI.ViewModels
 
         }
 
-        public DownloadItemInfo DownloadItemToDownloadItemInfo(DownloadItem downloadItem)
+        public static DownloadItemInfo DownloadItemToDownloadItemInfo(DownloadItem downloadItem)
         {
             return new DownloadItemInfo
             {

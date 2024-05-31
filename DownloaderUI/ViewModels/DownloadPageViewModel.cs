@@ -162,15 +162,13 @@ namespace DownloaderUI.ViewModels
                 SelectedFolder = result;
                 _ = new DirectoryInfo(SelectedFolder);
 
-                // DownloadItem.FolderPath = path;
-                DownloadItem.FolderPath = SelectedFolder;
-
                 GetFreeSpace();
             }
         }
 
         public void GetFreeSpace()
         {
+            DownloadItem.FolderPath = SelectedFolder;
             string root = Path.GetPathRoot(SelectedFolder);
 
             DriveInfo drive = new(root);
