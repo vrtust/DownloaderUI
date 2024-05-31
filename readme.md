@@ -4,9 +4,9 @@ DownloaderUI is a powerful and easy-to-use download manager built with C# and Av
 
 # Screenshoots
 
-![downloadlist](E:\Learning\VisualStudio\DownloaderUI\pic\downloadlist.png)
+![downloadlist](./pic/downloadlist.png)
 
-![settings](E:\Learning\VisualStudio\DownloaderUI\pic\settings.png)
+![settings](./pic/settings.png)
 
 # Credits
 
