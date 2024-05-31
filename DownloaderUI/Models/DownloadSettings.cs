@@ -32,5 +32,6 @@ namespace DownloaderUI.Models
         public bool ReserveStorageSpaceBeforeStartingDownload { get; set; }
         public string UserAgent { get; set; }
         public string ProxyUri { get; set; }
+        public string? DefaultPath { get; set; }
     }
 }

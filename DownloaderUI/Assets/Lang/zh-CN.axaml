@@ -92,4 +92,6 @@
     <system:String x:Key="My.Strings.DownloadOnDownloadPage">下载</system:String>
     <system:String x:Key="My.Strings.OpenFileAfterDownloadOnDownloadPage">下载后打开文件</system:String>
     <system:String x:Key="My.Strings.OpenFolderAfterDownloadOnDownloadPage">下载后打开文件夹</system:String>
+    <system:String x:Key="My.Strings.DefaultPath">默认路径</system:String>
+    <system:String x:Key="My.Strings.DefaultPathDescription">为下载设置默认路径</system:String>
 </ResourceDictionary>

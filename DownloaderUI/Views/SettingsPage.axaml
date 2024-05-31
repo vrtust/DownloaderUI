@@ -15,6 +15,13 @@
 						 Description="{DynamicResource My.Strings.DownloadSettingDescription}"
 						 Name="DownloadSeeting">
 
+				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.DefaultPath}"
+										 Description="{DynamicResource My.Strings.DefaultPathDescription}">
+					<ui:SettingsExpanderItem.Footer>
+						<Button Content="{Binding DefaultPath}" Command="{Binding SelectFolderCommand}" />
+					</ui:SettingsExpanderItem.Footer>
+				</ui:SettingsExpanderItem>
+
 				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.BufferBlockSize}"
 										 Description="{DynamicResource My.Strings.BufferBlockSizeDescription}">
 					<ui:SettingsExpanderItem.Footer>

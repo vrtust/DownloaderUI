@@ -62,7 +62,7 @@
     <system:String x:Key="My.Strings.MinimumSizeOfChunking">Minimum Size Of Chunking</system:String>
     <system:String x:Key="My.Strings.MinimumSizeOfChunkingDescription">minimum size of chunking to download a file in multiple parts, default value is 512</system:String>
     <system:String x:Key="My.Strings.ReserveStorageSpaceBeforeStartingDownload">Reserve Storage Space Before Starting Download</system:String>
-    <system:String x:Key="My.Strings.ReserveStorageSpaceBeforeStartingDownloadDescription">Before starting the download, reserve the storage space of the file as file size, default value is false</system:String>
+    <system:String x:Key="My.Strings.ReserveStorageSpaceBeforeStartingDownloadDescription">before starting the download, reserve the storage space of the file as file size, default value is false</system:String>
     <system:String x:Key="My.Strings.UserAgent">User Agent</system:String>
     <system:String x:Key="My.Strings.UserAgentDescription">set user agent</system:String>
     <system:String x:Key="My.Strings.ProxyUri">Proxy Uri</system:String>
@@ -92,4 +92,6 @@
     <system:String x:Key="My.Strings.DownloadOnDownloadPage">Download</system:String>
     <system:String x:Key="My.Strings.OpenFileAfterDownloadOnDownloadPage">Open File After Download</system:String>
     <system:String x:Key="My.Strings.OpenFolderAfterDownloadOnDownloadPage">Open Folder After Download</system:String>
+    <system:String x:Key="My.Strings.DefaultPath">Default Path</system:String>
+    <system:String x:Key="My.Strings.DefaultPathDescription">set default path for download</system:String>
 </ResourceDictionary>

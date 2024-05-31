@@ -31,13 +31,6 @@ namespace DownloaderUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedFolder, value);
         }
 
-        private string _selectedFolderPath;
-        public string SelectedFolderPath
-        {
-            get => _selectedFolderPath;
-            set => this.RaiseAndSetIfChanged(ref _selectedFolderPath, value);
-        }
-
         private string _url;
         public string Url
         {
@@ -145,6 +138,14 @@ namespace DownloaderUI.ViewModels
 
             IsParsed = false;
             PraseUrlEnable = false;
+
+            if(!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
+            {
+                SelectedFolder = DownloadSettings.Instance.DefaultPath;
+                Selected = true;
+                PraseUrlEnable = true;
+                GetFreeSpace();
+            }
         }
 
         private async Task SelectFolder()
@@ -164,22 +165,26 @@ namespace DownloaderUI.ViewModels
                 // DownloadItem.FolderPath = path;
                 DownloadItem.FolderPath = SelectedFolder;
 
-                string root = Path.GetPathRoot(SelectedFolder);
+                GetFreeSpace();
+            }
+        }
 
-                DriveInfo drive = new(root);
-                FreeSpace += FormatBytes(drive.AvailableFreeSpace);
-                try
-                {
-                    if (drive.AvailableFreeSpace < OrginalFileSize)
-                    {
-                        FreeSpace += ". No enough space here! Please select another folder.";
-                        PraseUrlEnable = false;
-                    }
-                }
-                catch (Exception)
-                {
+        public void GetFreeSpace()
+        {
+            string root = Path.GetPathRoot(SelectedFolder);
 
+            DriveInfo drive = new(root);
+            FreeSpace = FormatBytes(drive.AvailableFreeSpace);
+            try
+            {
+                if (drive.AvailableFreeSpace < OrginalFileSize)
+                {
+                    FreeSpace = ". No enough space here! Please select another folder.";
+                    PraseUrlEnable = false;
                 }
+            }
+            catch (Exception)
+            {
 
             }
         }

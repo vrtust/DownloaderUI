@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Fonts;
 using Avalonia.Styling;
@@ -10,7 +11,6 @@ using Newtonsoft.Json;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -25,6 +25,8 @@ namespace DownloaderUI.ViewModels
     {
         public SettingsPageViewModel()
         {
+            SelectFolderCommand = ReactiveCommand.CreateFromTask(SelectFolder);
+
             _ = LoadAsync();
             GetPredefColors();
             _faTheme = App.Current.Styles[0] as FluentAvaloniaTheme;
@@ -231,6 +233,7 @@ namespace DownloaderUI.ViewModels
             // Combine monitoring of all property changes
             var propertyChanges = new[]
             {
+                this.WhenAnyValue(x => x.DefaultPath).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.BufferBlockSize).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.ChunkCount).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.MaximumBytesPerSecond).Select(_ => Unit.Default),
@@ -260,6 +263,19 @@ namespace DownloaderUI.ViewModels
                     SaveAsync();
                     SyncDwonloadSettingsAsync();
                 });
+        }
+
+        public ReactiveCommand<Unit, Unit> SelectFolderCommand { get; }
+
+        private async Task SelectFolder()
+        {
+            var dialog = new OpenFolderDialog();
+            var result = await dialog.ShowAsync(App.MainWindow);
+
+            if (result != null)
+            {
+                DefaultPath = result;
+            }
         }
 
         private IFontCollection _fontsList = FontManager.Current.SystemFonts;
@@ -350,6 +366,14 @@ namespace DownloaderUI.ViewModels
         {
             get => _customAccentColor;
             set => this.RaiseAndSetIfChanged(ref _customAccentColor, value);
+        }
+
+        private string? _defaultPath;
+
+        public string? DefaultPath
+        {
+            get => _defaultPath;
+            set => this.RaiseAndSetIfChanged(ref _defaultPath, value);
         }
 
         // See more in
@@ -577,6 +601,7 @@ namespace DownloaderUI.ViewModels
             public Color? ListBoxColor { get; set; }
             public Color CustomAccentColor { get; set; }
             public string CurrentLanguage { get; set; }
+            public string? DefaultPath { get; set; }
             public int BufferBlockSize { get; set; }
             public int ChunkCount { get; set; }
             public int MaximumBytesPerSecond { get; set; }
@@ -641,6 +666,7 @@ namespace DownloaderUI.ViewModels
                 ListBoxColor = ListBoxColor,
                 CustomAccentColor = CustomAccentColor,
                 CurrentLanguage = CurrentLanguage,
+                DefaultPath = DefaultPath,
                 BufferBlockSize = BufferBlockSize,
                 ChunkCount = ChunkCount,
                 MaximumBytesPerSecond = MaximumBytesPerSecond,
@@ -680,6 +706,7 @@ namespace DownloaderUI.ViewModels
             ListBoxColor = loadedSettings.ListBoxColor;
             CustomAccentColor = loadedSettings.CustomAccentColor;
             CurrentLanguage = loadedSettings.CurrentLanguage;
+            DefaultPath = loadedSettings.DefaultPath;
             BufferBlockSize = loadedSettings.BufferBlockSize;
             ChunkCount = loadedSettings.ChunkCount;
             MaximumBytesPerSecond = loadedSettings.MaximumBytesPerSecond;
@@ -702,6 +729,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task SyncDwonloadSettingsAsync()
         {
+            DownloadSettings.Instance.DefaultPath = DefaultPath;
             DownloadSettings.Instance.BufferBlockSize = BufferBlockSize;
             DownloadSettings.Instance.ChunkCount = ChunkCount;
             DownloadSettings.Instance.MaximumBytesPerSecond = MaximumBytesPerSecond;
