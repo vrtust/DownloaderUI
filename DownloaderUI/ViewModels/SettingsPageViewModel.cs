@@ -736,6 +736,15 @@ namespace DownloaderUI.ViewModels
         {
             string DataPath = @".\DownloadData";
 
+            try
+            {
+                _ = File.ReadAllText(Path.Combine(DataPath, "Settings.json"));
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+
             string SettingsJson = File.ReadAllText(Path.Combine(DataPath, "Settings.json"));
 
             Settings loadedSettings = JsonConvert.DeserializeObject<Settings>(SettingsJson);
