@@ -68,7 +68,7 @@
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
 
-						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}" MaxWidth="100">
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}" MaxWidth="200">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
@@ -204,7 +204,7 @@
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
-						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}" MaxWidth="200">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
@@ -340,7 +340,7 @@
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
-						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}" MaxWidth="200">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />
@@ -476,7 +476,7 @@
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
-						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}">
+						<DataGridTemplateColumn Header="{DynamicResource My.Strings.ProgressBar}" MaxWidth="200">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<ProgressBar Height="20" Value="{Binding ProgressPercentage}" />

@@ -31,7 +31,7 @@ namespace DownloaderUI.ViewModels
             GetPredefColors();
             _faTheme = App.Current.Styles[0] as FluentAvaloniaTheme;
 
-            if(!string.IsNullOrEmpty(DefaultPath))
+            if (!string.IsNullOrEmpty(DefaultPath))
             {
                 Selected = true;
                 GetFreeSpace();
@@ -736,11 +736,7 @@ namespace DownloaderUI.ViewModels
         {
             string DataPath = @".\DownloadData";
 
-            try
-            {
-                _ = File.ReadAllText(Path.Combine(DataPath, "Settings.json"));
-            }
-            catch (Exception ex)
+            if (!File.Exists(Path.Combine(DataPath, "Settings.json")))
             {
                 return;
             }

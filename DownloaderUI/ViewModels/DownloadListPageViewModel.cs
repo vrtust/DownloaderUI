@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using Downloader;
 using DownloaderUI.Models;
@@ -114,6 +113,8 @@ namespace DownloaderUI.ViewModels
 
         public DownloadListPageViewModel()
         {
+            LoadAsync();
+
             NewLinkCommand = ReactiveCommand.CreateFromTask(NewLinkAsync);
             OpenCommand = ReactiveCommand.CreateFromTask(OpenAsync);
             OpenFolderCommand = ReactiveCommand.CreateFromTask(OpenFolderAsync);
@@ -384,7 +385,7 @@ namespace DownloaderUI.ViewModels
                 DwonloadAsync(downloadItem);
             }));
 
-            
+
         }
 
         // https://xx.xx/xx.zip -> xx.zip
@@ -508,7 +509,7 @@ namespace DownloaderUI.ViewModels
                         downloadItem.FileName = GetFileNameFromUrl(e.FileName);
                         downloadItem.Path = e.FileName;
                         downloadItem.FileSize = FormatBytesFromDouble(e.TotalBytesToReceive);
-                        if(e.TotalBytesToReceive > GetFreeSpace(downloadItem.Path))
+                        if (e.TotalBytesToReceive > GetFreeSpace(downloadItem.Path))
                         {
                             ExDialog("no enough space", "DownloadStarted");
                             return;
@@ -566,6 +567,7 @@ namespace DownloaderUI.ViewModels
 
                     CurrentDownloadService.DownloadFileCompleted += async (s, e) =>
                     {
+                        DownloadCollection downloadCollection = new();
                         downloadItem.Status = "Completed";
 
                         if (e.Error != null && !string.IsNullOrEmpty(e.Error.Message))
@@ -577,12 +579,6 @@ namespace DownloaderUI.ViewModels
                             else
                             {
                                 downloadItem.Status = "Error";
-                                downloadItem.Pack = CurrentDownloadService.Package;
-                                DownloadCollection downloadCollection = new()
-                                {
-                                    DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
-                                    DownloadService = CurrentDownloadService,
-                                };
 
                                 if (!string.IsNullOrEmpty(downloadItem.ExMessage))
                                 {
@@ -595,7 +591,13 @@ namespace DownloaderUI.ViewModels
                             }
                         }
 
+                        downloadItem.ProgressPercentage = 100.0;
+
                         _sourceCache.Refresh();
+                        downloadItem.Pack = CurrentDownloadService.Package;
+                        downloadCollection.DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem);
+                        downloadCollection.DownloadService = CurrentDownloadService;
+                        DownloadCollections[downloadItem.FileName] = downloadCollection;
 
                         _ = SaveAsync();
 
@@ -706,9 +708,54 @@ namespace DownloaderUI.ViewModels
             }
 
             DownloadServicesJson = JsonConvert.SerializeObject(DownloadCollections);
-            
-            await File.WriteAllTextAsync(Path.Combine(DataPath, "DownloadServices") + ".json", DownloadServicesJson);
 
+            await File.WriteAllTextAsync(Path.Combine(DataPath, "DownloadServices") + ".json", DownloadServicesJson);
+        }
+
+        public async Task LoadAsync()
+        {
+            string DataPath;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                DataPath = @".\DownloadData";
+            }
+            else
+            {
+                DataPath = @"./DownloadData";
+            }
+
+            string filePath = Path.Combine(DataPath, "DownloadServices.json");
+
+            if (File.Exists(filePath))
+            {
+                string DownloadServicesJson = await File.ReadAllTextAsync(filePath);
+                DownloadCollections = JsonConvert.DeserializeObject<Dictionary<string, DownloadCollection>>(DownloadServicesJson);
+
+                foreach (var kvp_DownloadCollections in DownloadCollections)
+                {
+                    string serviceName = kvp_DownloadCollections.Key;
+                    DownloadCollection downloadCollection = kvp_DownloadCollections.Value;
+
+                    DownloadItemInfo downloadItemInfo = downloadCollection.DownloadItemInfo;
+                    DownloadItem downloadItem = new()
+                    {
+                        Id = downloadItemInfo.Id,
+                        FileName = downloadItemInfo.FileName,
+                        ProgressPercentage = downloadItemInfo.ProgressPercentage,
+                        FileSize = downloadItemInfo.FileSize,
+                        FolderPath = downloadItemInfo.FolderPath,
+                        Path = downloadItemInfo.Path,
+                        Url = downloadItemInfo.Url,
+                        Status = downloadItemInfo.Status,
+                        Pack = downloadItemInfo.Pack,
+                        PackageJson = downloadItemInfo.PackageJson,
+                        ExMessage = downloadItemInfo.ExMessage,
+                        IsOpen = downloadItemInfo.IsOpen,
+                        IsOpenFolder = downloadItemInfo.IsOpenFolder,
+                    };
+                    _sourceCache.AddOrUpdate(downloadItem);
+                }
+            }
         }
 
         // xxxxxxxxx -> xx.xxx MB 
@@ -868,7 +915,7 @@ namespace DownloaderUI.ViewModels
                                 downloadItem.FolderPath = DownloadSettings.Instance.DefaultPath;
                                 DwonloadAsync(downloadItem);
                             }
-                            
+
                         }
                         else
                         {

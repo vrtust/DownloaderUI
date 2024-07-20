@@ -139,7 +139,7 @@ namespace DownloaderUI.ViewModels
             IsParsed = false;
             PraseUrlEnable = false;
 
-            if(!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
+            if (!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
             {
                 SelectedFolder = DownloadSettings.Instance.DefaultPath;
                 Selected = true;
