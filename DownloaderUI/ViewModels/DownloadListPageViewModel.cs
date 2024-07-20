@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Downloader;
 using DownloaderUI.Models;
@@ -15,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
@@ -370,7 +372,8 @@ namespace DownloaderUI.ViewModels
             };
 
             // set current window as owner of new window
-            newWindow.ShowDialog(App.MainWindow);
+            // newWindow.ShowDialog(App.MainWindow);
+            newWindow.Show();
 
             _ = MessageBus.Current.Listen<DownloadFileAddedMessage>().Subscribe((Action<DownloadFileAddedMessage>)(async message =>
             {
@@ -378,298 +381,310 @@ namespace DownloaderUI.ViewModels
 
                 newWindow.Close();
 
-                if (downloadItem != null)
+                DwonloadAsync(downloadItem);
+            }));
+
+            
+        }
+
+        // https://xx.xx/xx.zip -> xx.zip
+        // F:/xx/xx.zip -> xx.zip
+        static string GetFileNameFromUrl(string url)
+        {
+            Uri uri = new(url);
+            string fileName = Path.GetFileName(uri.LocalPath);
+
+            return fileName;
+        }
+
+        public async Task DwonloadAsync(DownloadItem downloadItem)
+        {
+            if (downloadItem != null)
+            {
+                if (Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
                 {
-                    if (Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
+                    var dialog = new ContentDialog()
                     {
-                        var dialog = new ContentDialog()
-                        {
-                            Title = $"{downloadItem.FileName} is already existed!",
-                            PrimaryButtonText = "Ok",
-                            CloseButtonText = "Close"
-                        };
+                        Title = $"{downloadItem.FileName} is already existed!",
+                        PrimaryButtonText = "Ok",
+                        CloseButtonText = "Close"
+                    };
 
-                        await dialog.ShowAsync();
+                    await dialog.ShowAsync();
+                }
+                else
+                {
+                    long MaximumBytesPerSecond = 0;
+                    switch (DownloadSettings.Instance.UnitForMaximumBytesPerSecond)
+                    {
+                        case "B":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond;
+                            break;
+                        case "KB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024;
+                            break;
+                        case "MB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024;
+                            break;
+                        case "GB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024 * 1024;
+                            break;
                     }
-                    else
+                    long MaximumMemoryBufferBytes = 0;
+                    switch (DownloadSettings.Instance.UnitForMaximumMemoryBufferBytes)
                     {
-                        long MaximumBytesPerSecond = 0;
-                        switch (DownloadSettings.Instance.UnitForMaximumBytesPerSecond)
-                        {
-                            case "B":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond;
-                                break;
-                            case "KB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024;
-                                break;
-                            case "MB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024;
-                                break;
-                            case "GB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024 * 1024;
-                                break;
-                        }
-                        long MaximumMemoryBufferBytes = 0;
-                        switch (DownloadSettings.Instance.UnitForMaximumMemoryBufferBytes)
-                        {
-                            case "B":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond;
-                                break;
-                            case "KB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024;
-                                break;
-                            case "MB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024;
-                                break;
-                            case "GB":
-                                MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024 * 1024;
-                                break;
-                        }
+                        case "B":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond;
+                            break;
+                        case "KB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024;
+                            break;
+                        case "MB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024;
+                            break;
+                        case "GB":
+                            MaximumBytesPerSecond = DownloadSettings.Instance.MaximumBytesPerSecond * 1024 * 1024 * 1024;
+                            break;
+                    }
 
-                        DownloadConfiguration downloadOpt;
+                    DownloadConfiguration downloadOpt;
 
-                        if (!string.IsNullOrEmpty(DownloadSettings.Instance.ProxyUri))
+                    if (!string.IsNullOrEmpty(DownloadSettings.Instance.ProxyUri))
+                    {
+                        downloadOpt = new DownloadConfiguration()
                         {
-                            downloadOpt = new DownloadConfiguration()
-                            {
-                                BufferBlockSize = DownloadSettings.Instance.BufferBlockSize,
-                                ChunkCount = DownloadSettings.Instance.ChunkCount,
-                                MaximumBytesPerSecond = MaximumBytesPerSecond,
-                                MaxTryAgainOnFailover = DownloadSettings.Instance.MaxTryAgainOnFailover,
-                                MaximumMemoryBufferBytes = DownloadSettings.Instance.MaximumMemoryBufferBytes,
-                                ParallelDownload = DownloadSettings.Instance.ParallelDownload,
-                                ParallelCount = DownloadSettings.Instance.ParallelCount,
-                                Timeout = DownloadSettings.Instance.Timeout,
-                                RangeDownload = DownloadSettings.Instance.RangeDownload,
-                                RangeLow = DownloadSettings.Instance.RangeLow,
-                                RangeHigh = DownloadSettings.Instance.RangeHigh,
-                                ClearPackageOnCompletionWithFailure = DownloadSettings.Instance.ClearPackageOnCompletionWithFailure,
-                                MinimumSizeOfChunking = DownloadSettings.Instance.MinimumSizeOfChunking,
-                                ReserveStorageSpaceBeforeStartingDownload = DownloadSettings.Instance.ReserveStorageSpaceBeforeStartingDownload,
-                                RequestConfiguration =
+                            BufferBlockSize = DownloadSettings.Instance.BufferBlockSize,
+                            ChunkCount = DownloadSettings.Instance.ChunkCount,
+                            MaximumBytesPerSecond = MaximumBytesPerSecond,
+                            MaxTryAgainOnFailover = DownloadSettings.Instance.MaxTryAgainOnFailover,
+                            MaximumMemoryBufferBytes = DownloadSettings.Instance.MaximumMemoryBufferBytes,
+                            ParallelDownload = DownloadSettings.Instance.ParallelDownload,
+                            ParallelCount = DownloadSettings.Instance.ParallelCount,
+                            Timeout = DownloadSettings.Instance.Timeout,
+                            RangeDownload = DownloadSettings.Instance.RangeDownload,
+                            RangeLow = DownloadSettings.Instance.RangeLow,
+                            RangeHigh = DownloadSettings.Instance.RangeHigh,
+                            ClearPackageOnCompletionWithFailure = DownloadSettings.Instance.ClearPackageOnCompletionWithFailure,
+                            MinimumSizeOfChunking = DownloadSettings.Instance.MinimumSizeOfChunking,
+                            ReserveStorageSpaceBeforeStartingDownload = DownloadSettings.Instance.ReserveStorageSpaceBeforeStartingDownload,
+                            RequestConfiguration =
                                 {
                                     UserAgent = DownloadSettings.Instance.UserAgent,
                                     Proxy = new WebProxy() {
                                        Address = new Uri(DownloadSettings.Instance.ProxyUri)
                                     }
                                 }
-                            };
-                        }
-                        else
+                        };
+                    }
+                    else
+                    {
+                        downloadOpt = new DownloadConfiguration()
                         {
-                            downloadOpt = new DownloadConfiguration()
-                            {
-                                BufferBlockSize = DownloadSettings.Instance.BufferBlockSize,
-                                ChunkCount = DownloadSettings.Instance.ChunkCount,
-                                MaximumBytesPerSecond = MaximumBytesPerSecond,
-                                MaxTryAgainOnFailover = DownloadSettings.Instance.MaxTryAgainOnFailover,
-                                MaximumMemoryBufferBytes = DownloadSettings.Instance.MaximumMemoryBufferBytes,
-                                ParallelDownload = DownloadSettings.Instance.ParallelDownload,
-                                ParallelCount = DownloadSettings.Instance.ParallelCount,
-                                Timeout = DownloadSettings.Instance.Timeout,
-                                RangeDownload = DownloadSettings.Instance.RangeDownload,
-                                RangeLow = DownloadSettings.Instance.RangeLow,
-                                RangeHigh = DownloadSettings.Instance.RangeHigh,
-                                ClearPackageOnCompletionWithFailure = DownloadSettings.Instance.ClearPackageOnCompletionWithFailure,
-                                MinimumSizeOfChunking = DownloadSettings.Instance.MinimumSizeOfChunking,
-                                ReserveStorageSpaceBeforeStartingDownload = DownloadSettings.Instance.ReserveStorageSpaceBeforeStartingDownload,
-                                RequestConfiguration =
+                            BufferBlockSize = DownloadSettings.Instance.BufferBlockSize,
+                            ChunkCount = DownloadSettings.Instance.ChunkCount,
+                            MaximumBytesPerSecond = MaximumBytesPerSecond,
+                            MaxTryAgainOnFailover = DownloadSettings.Instance.MaxTryAgainOnFailover,
+                            MaximumMemoryBufferBytes = DownloadSettings.Instance.MaximumMemoryBufferBytes,
+                            ParallelDownload = DownloadSettings.Instance.ParallelDownload,
+                            ParallelCount = DownloadSettings.Instance.ParallelCount,
+                            Timeout = DownloadSettings.Instance.Timeout,
+                            RangeDownload = DownloadSettings.Instance.RangeDownload,
+                            RangeLow = DownloadSettings.Instance.RangeLow,
+                            RangeHigh = DownloadSettings.Instance.RangeHigh,
+                            ClearPackageOnCompletionWithFailure = DownloadSettings.Instance.ClearPackageOnCompletionWithFailure,
+                            MinimumSizeOfChunking = DownloadSettings.Instance.MinimumSizeOfChunking,
+                            ReserveStorageSpaceBeforeStartingDownload = DownloadSettings.Instance.ReserveStorageSpaceBeforeStartingDownload,
+                            RequestConfiguration =
                                 {
                                     UserAgent = DownloadSettings.Instance.UserAgent
                                 }
-                            };
+                        };
+                    }
+
+                    DownloadService CurrentDownloadService = new(downloadOpt);
+
+                    CurrentDownloadService.DownloadStarted += (s, e) =>
+                    {
+                        downloadItem.FileName = GetFileNameFromUrl(e.FileName);
+                        downloadItem.Path = e.FileName;
+                        downloadItem.FileSize = FormatBytesFromDouble(e.TotalBytesToReceive);
+                        if(e.TotalBytesToReceive > GetFreeSpace(downloadItem.Path))
+                        {
+                            ExDialog("no enough space", "DownloadStarted");
+                            return;
                         }
 
-                        DownloadService CurrentDownloadService = new(downloadOpt);
-
-                        CurrentDownloadService.DownloadStarted += (s, e) =>
+                        Dispatcher.UIThread.InvokeAsync((Action)(async () =>
                         {
-                            downloadItem.FileName = GetFileNameFromUrl(e.FileName);
-                            downloadItem.Path = e.FileName;
-                            downloadItem.FileSize = FormatBytesFromDouble(e.TotalBytesToReceive);
-
-                            Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                            try
                             {
-                                try
+                                if (!Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
                                 {
-                                    if (!Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
-                                    {
-                                        downloadItem.Status = "Downloading";
-                                        downloadItem.Pack = CurrentDownloadService.Package;
-                                        _sourceCache.AddOrUpdate(downloadItem);
-                                        DownloadCollection downloadCollection = new()
-                                        {
-                                            DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
-                                            DownloadService = CurrentDownloadService,
-                                        };
-                                        DownloadCollections.Add(downloadItem.FileName, downloadCollection);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    downloadItem.ExMessage = $"{downloadItem.ExMessage}. \nDownloadStarted:{ex.Message}";
-                                }
-
-                            }));
-
-                        };
-
-                        DateTime lastUpdate = DateTime.MinValue;
-
-                        CurrentDownloadService.ChunkDownloadProgressChanged += (s, e) =>
-                        {
-
-                        };
-
-                        CurrentDownloadService.DownloadProgressChanged += (s, e) =>
-                        {
-                            if (e.ProgressPercentage == 100)
-                            {
-                                downloadItem.ProgressPercentage = e.ProgressPercentage;
-                                downloadItem.BytesPerSecondSpeed = "0 MB/s";
-                                downloadItem.ReceivedBytesSize = FormatBytesFromLong(e.ReceivedBytesSize);
-                            }
-                            if (DateTime.Now - lastUpdate > TimeSpan.FromMilliseconds(200))
-                            {
-                                downloadItem.ProgressPercentage = e.ProgressPercentage;
-                                downloadItem.BytesPerSecondSpeed = FormatBytesFromDoubleWithSpeed(e.BytesPerSecondSpeed);
-                                downloadItem.ReceivedBytesSize = FormatBytesFromLong(e.ReceivedBytesSize);
-                                lastUpdate = DateTime.Now;
-                            }
-                        };
-
-                        CurrentDownloadService.DownloadFileCompleted += async (s, e) =>
-                        {
-                            downloadItem.Status = "Completed";
-
-                            if (e.Error != null && !string.IsNullOrEmpty(e.Error.Message))
-                            {
-                                if (e.Error.Message.Equals("A task was canceled."))
-                                {
-                                    downloadItem.Status = "Pause";
-                                }
-                                else
-                                {
-                                    downloadItem.Status = "Error";
+                                    downloadItem.Status = "Downloading";
                                     downloadItem.Pack = CurrentDownloadService.Package;
+                                    _sourceCache.AddOrUpdate(downloadItem);
                                     DownloadCollection downloadCollection = new()
                                     {
                                         DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
                                         DownloadService = CurrentDownloadService,
                                     };
-
-                                    if (!string.IsNullOrEmpty(downloadItem.ExMessage))
-                                    {
-                                        downloadItem.ExMessage = $"{downloadItem.ExMessage} \nDownloadFileCompleted: {e.Error.Message}";
-                                    }
-                                    else
-                                    {
-                                        downloadItem.ExMessage = $"DownloadFileCompleted: {e.Error.Message}";
-                                    }
+                                    DownloadCollections.Add(downloadItem.FileName, downloadCollection);
                                 }
                             }
-
-                            _sourceCache.Refresh();
-
-                            _ = SaveAsync();
-
-                            if (downloadItem.IsOpen == true)
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    if (string.IsNullOrEmpty(downloadItem.Path))
-                                    {
-                                        _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                        {
-                                            await ExDialog("Can't Find The File", "DownloadFileCompleted.IsOpenFolder");
-                                        }));
-                                    }
-                                    else
-                                    {
-                                        Process proc = new()
-                                        {
-                                            StartInfo = new ProcessStartInfo()
-                                            {
-                                                FileName = downloadItem.Path,
-                                                UseShellExecute = true
-                                            }
-                                        };
-                                        proc.Start();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                    {
-                                        await ExDialog(ex.Message, "DownloadFileCompleted.IsOpen");
-                                    }));
-                                }
+                                downloadItem.ExMessage = $"{downloadItem.ExMessage}. \nDownloadStarted:{ex.Message}";
                             }
-                            if (downloadItem.IsOpenFolder == true)
-                            {
-                                try
-                                {
-                                    if (string.IsNullOrEmpty(downloadItem.Path))
-                                    {
-                                        _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                        {
-                                            await ExDialog("Can't Find The Folder", "DownloadFileCompleted.IsOpenFolder");
-                                        }));
-                                    }
-                                    else
-                                    {
-                                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                                        {
-                                            Process.Start(new ProcessStartInfo()
-                                            {
-                                                FileName = "explorer.exe",
-                                                Arguments = $"/select, \"{downloadItem.Path}\"",
-                                                UseShellExecute = true,
-                                                CreateNoWindow = true
-                                            });
-                                        }
-                                        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                                        {
-                                            string directoryPath = Path.GetDirectoryName(downloadItem.Path);
-                                            var processStartInfo = new ProcessStartInfo
-                                            {
-                                                FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "xdg-open" : "open",
-                                                Arguments = directoryPath,
-                                                UseShellExecute = true,
-                                            };
 
-                                            Process.Start(processStartInfo);
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                    {
-                                        await ExDialog(ex.Message, "DownloadFileCompleted.IsOpenFolder");
-                                    }));
+                        }));
 
-                                }
-                            }
-                        };
+                    };
 
-                        await Task.Run(() =>
+                    DateTime lastUpdate = DateTime.MinValue;
+
+                    CurrentDownloadService.ChunkDownloadProgressChanged += (s, e) =>
+                    {
+
+                    };
+
+                    CurrentDownloadService.DownloadProgressChanged += (s, e) =>
+                    {
+                        if (e.ProgressPercentage == 100)
                         {
-                            CurrentDownloadService.DownloadFileTaskAsync(downloadItem.Url, new DirectoryInfo(downloadItem.FolderPath));
-                        });
+                            downloadItem.ProgressPercentage = e.ProgressPercentage;
+                            downloadItem.BytesPerSecondSpeed = "0 MB/s";
+                            downloadItem.ReceivedBytesSize = FormatBytesFromLong(e.ReceivedBytesSize);
+                        }
+                        if (DateTime.Now - lastUpdate > TimeSpan.FromMilliseconds(200))
+                        {
+                            downloadItem.ProgressPercentage = e.ProgressPercentage;
+                            downloadItem.BytesPerSecondSpeed = FormatBytesFromDoubleWithSpeed(e.BytesPerSecondSpeed);
+                            downloadItem.ReceivedBytesSize = FormatBytesFromLong(e.ReceivedBytesSize);
+                            lastUpdate = DateTime.Now;
+                        }
+                    };
 
-                    }
+                    CurrentDownloadService.DownloadFileCompleted += async (s, e) =>
+                    {
+                        downloadItem.Status = "Completed";
+
+                        if (e.Error != null && !string.IsNullOrEmpty(e.Error.Message))
+                        {
+                            if (e.Error.Message.Equals("A task was canceled."))
+                            {
+                                downloadItem.Status = "Pause";
+                            }
+                            else
+                            {
+                                downloadItem.Status = "Error";
+                                downloadItem.Pack = CurrentDownloadService.Package;
+                                DownloadCollection downloadCollection = new()
+                                {
+                                    DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem),
+                                    DownloadService = CurrentDownloadService,
+                                };
+
+                                if (!string.IsNullOrEmpty(downloadItem.ExMessage))
+                                {
+                                    downloadItem.ExMessage = $"{downloadItem.ExMessage} \nDownloadFileCompleted: {e.Error.Message}";
+                                }
+                                else
+                                {
+                                    downloadItem.ExMessage = $"DownloadFileCompleted: {e.Error.Message}";
+                                }
+                            }
+                        }
+
+                        _sourceCache.Refresh();
+
+                        _ = SaveAsync();
+
+                        if (downloadItem.IsOpen == true)
+                        {
+                            try
+                            {
+                                if (string.IsNullOrEmpty(downloadItem.Path))
+                                {
+                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                    {
+                                        await ExDialog("Can't Find The File", "DownloadFileCompleted.IsOpenFolder");
+                                    }));
+                                }
+                                else
+                                {
+                                    Process proc = new()
+                                    {
+                                        StartInfo = new ProcessStartInfo()
+                                        {
+                                            FileName = downloadItem.Path,
+                                            UseShellExecute = true
+                                        }
+                                    };
+                                    proc.Start();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                {
+                                    await ExDialog(ex.Message, "DownloadFileCompleted.IsOpen");
+                                }));
+                            }
+                        }
+                        if (downloadItem.IsOpenFolder == true)
+                        {
+                            try
+                            {
+                                if (string.IsNullOrEmpty(downloadItem.Path))
+                                {
+                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                    {
+                                        await ExDialog("Can't Find The Folder", "DownloadFileCompleted.IsOpenFolder");
+                                    }));
+                                }
+                                else
+                                {
+                                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                                    {
+                                        Process.Start(new ProcessStartInfo()
+                                        {
+                                            FileName = "explorer.exe",
+                                            Arguments = $"/select, \"{downloadItem.Path}\"",
+                                            UseShellExecute = true,
+                                            CreateNoWindow = true
+                                        });
+                                    }
+                                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                    {
+                                        string directoryPath = Path.GetDirectoryName(downloadItem.Path);
+                                        var processStartInfo = new ProcessStartInfo
+                                        {
+                                            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "xdg-open" : "open",
+                                            Arguments = directoryPath,
+                                            UseShellExecute = true,
+                                        };
+
+                                        Process.Start(processStartInfo);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                {
+                                    await ExDialog(ex.Message, "DownloadFileCompleted.IsOpenFolder");
+                                }));
+
+                            }
+                        }
+                    };
+
+                    await Task.Run(() =>
+                    {
+                        CurrentDownloadService.DownloadFileTaskAsync(downloadItem.Url, new DirectoryInfo(downloadItem.FolderPath));
+                    });
+
                 }
-            }));
-
-            // https://xx.xx/xx.zip -> xx.zip
-            // F:/xx/xx.zip -> xx.zip
-            static string GetFileNameFromUrl(string url)
-            {
-                Uri uri = new(url);
-                string fileName = Path.GetFileName(uri.LocalPath);
-
-                return fileName;
             }
         }
 
@@ -805,15 +820,23 @@ namespace DownloaderUI.ViewModels
             };
         }
 
+        public long GetFreeSpace(string path)
+        {
+            string root = Path.GetPathRoot(path);
+
+            DriveInfo drive = new(root);
+            return drive.AvailableFreeSpace;
+        }
+
         /// <summary>
         /// a http server for extension
         /// </summary>
         public async Task ExtensionServer()
         {
-            HttpListener listener = new HttpListener();
+            HttpListener listener = new();
             listener.Prefixes.Add("http://localhost:5000/");
             listener.Start();
-            Console.WriteLine("HTTP server is running, waiting for URL...");
+            // TestMessage = "HTTP server is running, waiting for URL...";
 
             while (true)
             {
@@ -823,11 +846,55 @@ namespace DownloaderUI.ViewModels
                 string url = request.QueryString["url"];
                 if (!string.IsNullOrEmpty(url))
                 {
-                    Console.WriteLine("receieved URL: " + url);
-                    // Task.Run(() => DownloadFile(url));
+                    /// TestMessage = "receieved URL: " + url;
+                    using HttpClient httpClient = new();
+
+                    DownloadItem downloadItem = new();
+
+                    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                    try
+                    {
+                        HttpResponseMessage response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            if (!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
+                            {
+                                downloadItem.Id = Guid.NewGuid();
+                                string fileName = GetFileNameFromUrl(url);
+                                downloadItem.FileName = fileName;
+                                // TestMessage = fileName;
+                                downloadItem.Url = url;
+                                downloadItem.FolderPath = DownloadSettings.Instance.DefaultPath;
+                                DwonloadAsync(downloadItem);
+                            }
+                            
+                        }
+                        else
+                        {
+                            var dialog = new ContentDialog()
+                            {
+                                Title = $"Failed to retrieve information from {url}. Status code: {response.StatusCode}",
+                                PrimaryButtonText = "Ok",
+                                CloseButtonText = "Close"
+                            };
+
+                            var result = await dialog.ShowAsync();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var dialog = new ContentDialog()
+                        {
+                            Title = $"An error occurred: {ex.Message}",
+                            PrimaryButtonText = "Ok",
+                            CloseButtonText = "Close"
+                        };
+
+                        var result = await dialog.ShowAsync();
+                    }
                 }
             }
         }
-
     }
 }
