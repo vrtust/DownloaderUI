@@ -160,6 +160,8 @@ namespace DownloaderUI.ViewModels
                 .Bind(out _errorList)
                 .DisposeMany()
                 .Subscribe();
+
+            Task.Run(() => ExtensionServer());
         }
 
         public async Task ExDialog(string ex, string From)
@@ -802,5 +804,30 @@ namespace DownloaderUI.ViewModels
                 IsOpenFolder = downloadItem.IsOpenFolder
             };
         }
+
+        /// <summary>
+        /// a http server for extension
+        /// </summary>
+        public async Task ExtensionServer()
+        {
+            HttpListener listener = new HttpListener();
+            listener.Prefixes.Add("http://localhost:5000/");
+            listener.Start();
+            Console.WriteLine("HTTP server is running, waiting for URL...");
+
+            while (true)
+            {
+                HttpListenerContext context = listener.GetContext();
+                HttpListenerRequest request = context.Request;
+
+                string url = request.QueryString["url"];
+                if (!string.IsNullOrEmpty(url))
+                {
+                    Console.WriteLine("receieved URL: " + url);
+                    // Task.Run(() => DownloadFile(url));
+                }
+            }
+        }
+
     }
 }
