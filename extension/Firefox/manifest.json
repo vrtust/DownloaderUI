@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Custom Download Manager",
+  "version": "1.0",
+  "description": "Intercepts downloads and uses a custom download manager",
+  "permissions": [
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "applications": {
+    "gecko": {
+      "id": "ping_pong@example.org",
+      "strict_min_version": "50.0"
+    }
+  },
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "48": "icons/border-48.png"
+    }
+  },
+  "icons": {
+    "48": "icons/border-48.png"
+  }
+}
