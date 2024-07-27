@@ -752,6 +752,8 @@ namespace DownloaderUI.ViewModels
                         ExMessage = downloadItemInfo.ExMessage,
                         IsOpen = downloadItemInfo.IsOpen,
                         IsOpenFolder = downloadItemInfo.IsOpenFolder,
+                        BytesPerSecondSpeed = downloadItemInfo.BytesPerSecondSpeed,
+                        ReceivedBytesSize = downloadItemInfo.ReceivedBytesSize,
                     };
                     _sourceCache.AddOrUpdate(downloadItem);
                 }
@@ -863,7 +865,9 @@ namespace DownloaderUI.ViewModels
                 PackageJson = downloadItem.PackageJson,
                 ExMessage = downloadItem.ExMessage,
                 IsOpen = downloadItem.IsOpen,
-                IsOpenFolder = downloadItem.IsOpenFolder
+                IsOpenFolder = downloadItem.IsOpenFolder,
+                BytesPerSecondSpeed = downloadItem.BytesPerSecondSpeed,
+                ReceivedBytesSize = downloadItem.ReceivedBytesSize,
             };
         }
 

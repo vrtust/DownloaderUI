@@ -18,5 +18,7 @@ namespace DownloaderUI.Models
         public string ExMessage { get; set; }
         public bool IsOpen { get; set; }
         public bool IsOpenFolder { get; set; }
+        public string BytesPerSecondSpeed { get; set; }
+        public string ReceivedBytesSize { get; set; }
     }
 }
