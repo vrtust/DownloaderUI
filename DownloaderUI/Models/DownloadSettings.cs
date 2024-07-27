@@ -33,5 +33,7 @@ namespace DownloaderUI.Models
         public string UserAgent { get; set; }
         public string ProxyUri { get; set; }
         public string? DefaultPath { get; set; }
+        public bool IsOpenFile { get; set; }
+        public bool IsOpenFolder { get; set; }
     }
 }

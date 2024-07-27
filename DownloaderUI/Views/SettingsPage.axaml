@@ -34,6 +34,19 @@
 					</ui:SettingsExpanderItem.Footer>
 				</ui:SettingsExpanderItem>
 
+				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.IsOpenFile}"
+										 Description="{DynamicResource My.Strings.IsOpenFileDescription}">
+					<ui:SettingsExpanderItem.Footer>
+						<CheckBox IsChecked="{Binding IsOpenFile}"/>
+					</ui:SettingsExpanderItem.Footer>
+				</ui:SettingsExpanderItem>
+				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.IsOpenFolder}"
+										 Description="{DynamicResource My.Strings.IsOpenFolderDescription}">
+					<ui:SettingsExpanderItem.Footer>
+						<CheckBox IsChecked="{Binding IsOpenFolder}"/>
+					</ui:SettingsExpanderItem.Footer>
+				</ui:SettingsExpanderItem>
+
 				<ui:SettingsExpanderItem Content="{DynamicResource My.Strings.BufferBlockSize}"
 										 Description="{DynamicResource My.Strings.BufferBlockSizeDescription}">
 					<ui:SettingsExpanderItem.Footer>

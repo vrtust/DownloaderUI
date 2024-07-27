@@ -94,4 +94,8 @@
     <system:String x:Key="My.Strings.OpenFolderAfterDownloadOnDownloadPage">Open Folder After Download</system:String>
     <system:String x:Key="My.Strings.DefaultPath">Default Path</system:String>
     <system:String x:Key="My.Strings.DefaultPathDescription">set default path for download</system:String>
+    <system:String x:Key="My.Strings.IsOpenFile">open file</system:String>
+    <system:String x:Key="My.Strings.IsOpenFileDescription">open file after download</system:String>
+    <system:String x:Key="My.Strings.IsOpenFolder">open folder</system:String>
+    <system:String x:Key="My.Strings.IsOpenFolderDescription">open folder after download</system:String>
 </ResourceDictionary>

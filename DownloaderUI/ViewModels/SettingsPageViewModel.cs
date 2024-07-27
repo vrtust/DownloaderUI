@@ -240,6 +240,8 @@ namespace DownloaderUI.ViewModels
             var propertyChanges = new[]
             {
                 this.WhenAnyValue(x => x.DefaultPath).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.IsOpenFile).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.IsOpenFolder).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.BufferBlockSize).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.ChunkCount).Select(_ => Unit.Default),
                 this.WhenAnyValue(x => x.MaximumBytesPerSecond).Select(_ => Unit.Default),
@@ -420,6 +422,30 @@ namespace DownloaderUI.ViewModels
             }
 
             return $"{formattedValue:F3} {suffixes[suffixIndex]}";
+        }
+
+        private bool _isOpenFile;
+
+        public bool IsOpenFile
+        {
+            get => _isOpenFile;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isOpenFile, value);
+                DownloadSettings.Instance.IsOpenFile = value;
+            }
+        }
+
+        private bool _isOpenFolder;
+
+        public bool IsOpenFolder
+        {
+            get => _isOpenFolder;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isOpenFolder, value);
+                DownloadSettings.Instance.IsOpenFolder = value;
+            }
         }
 
         // See more in
@@ -666,6 +692,8 @@ namespace DownloaderUI.ViewModels
             public bool ReserveStorageSpaceBeforeStartingDownload { get; set; }
             public string UserAgent { get; set; }
             public string ProxyUri { get; set; }
+            public bool IsOpenFile { get; set; }
+            public bool IsOpenFolder { get; set; }
 
         }
 
@@ -726,6 +754,8 @@ namespace DownloaderUI.ViewModels
                 ReserveStorageSpaceBeforeStartingDownload = ReserveStorageSpaceBeforeStartingDownload,
                 UserAgent = UserAgent,
                 ProxyUri = ProxyUri,
+                IsOpenFile = IsOpenFile,
+                IsOpenFolder = IsOpenFolder
             };
 
             string SettingsJson = JsonConvert.SerializeObject(settings, Formatting.Indented);
@@ -771,6 +801,8 @@ namespace DownloaderUI.ViewModels
             ReserveStorageSpaceBeforeStartingDownload = loadedSettings.ReserveStorageSpaceBeforeStartingDownload;
             UserAgent = loadedSettings.UserAgent;
             ProxyUri = loadedSettings.ProxyUri;
+            IsOpenFile = loadedSettings.IsOpenFile;
+            IsOpenFolder = loadedSettings.IsOpenFolder;
         }
 
         public async Task SyncDwonloadSettingsAsync()
@@ -794,6 +826,8 @@ namespace DownloaderUI.ViewModels
             DownloadSettings.Instance.ReserveStorageSpaceBeforeStartingDownload = ReserveStorageSpaceBeforeStartingDownload;
             DownloadSettings.Instance.UserAgent = UserAgent;
             DownloadSettings.Instance.ProxyUri = ProxyUri;
+            DownloadSettings.Instance.IsOpenFile = IsOpenFile;
+            DownloadSettings.Instance.IsOpenFolder = IsOpenFolder;
         }
     }
 }

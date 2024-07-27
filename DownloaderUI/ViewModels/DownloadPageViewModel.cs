@@ -106,7 +106,7 @@ namespace DownloaderUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selected, value);
         }
 
-        private bool _isOpen;
+        private bool _isOpen = DownloadSettings.Instance.IsOpenFile;
 
         public bool IsOpen
         {
@@ -114,7 +114,7 @@ namespace DownloaderUI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isOpen, value);
         }
 
-        private bool _isOpenFolder;
+        private bool _isOpenFolder = DownloadSettings.Instance.IsOpenFolder;
 
         public bool IsOpenFolder
         {
