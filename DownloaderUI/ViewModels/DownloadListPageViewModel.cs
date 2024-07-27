@@ -567,118 +567,131 @@ namespace DownloaderUI.ViewModels
 
                     CurrentDownloadService.DownloadFileCompleted += async (s, e) =>
                     {
-                        DownloadCollection downloadCollection = new();
-                        downloadItem.Status = "Completed";
-
-                        if (e.Error != null && !string.IsNullOrEmpty(e.Error.Message))
-                        {
-                            if (e.Error.Message.Equals("A task was canceled."))
-                            {
-                                downloadItem.Status = "Pause";
-                            }
-                            else
-                            {
-                                downloadItem.Status = "Error";
-
-                                if (!string.IsNullOrEmpty(downloadItem.ExMessage))
-                                {
-                                    downloadItem.ExMessage = $"{downloadItem.ExMessage} \nDownloadFileCompleted: {e.Error.Message}";
-                                }
-                                else
-                                {
-                                    downloadItem.ExMessage = $"DownloadFileCompleted: {e.Error.Message}";
-                                }
-                            }
+                        if (downloadItem.Status.Equals("Pause")){
+                            _sourceCache.Refresh();
+                            DownloadCollection downloadCollection = new();
+                            downloadItem.Pack = CurrentDownloadService.Package;
+                            downloadCollection.DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem);
+                            downloadCollection.DownloadService = CurrentDownloadService;
+                            DownloadCollections[downloadItem.FileName] = downloadCollection;
+                            _ = SaveAsync();
                         }
-
-                        downloadItem.ProgressPercentage = 100.0;
-
-                        _sourceCache.Refresh();
-                        downloadItem.Pack = CurrentDownloadService.Package;
-                        downloadCollection.DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem);
-                        downloadCollection.DownloadService = CurrentDownloadService;
-                        DownloadCollections[downloadItem.FileName] = downloadCollection;
-
-                        _ = SaveAsync();
-
-                        if (downloadItem.IsOpen == true)
+                        else
                         {
-                            try
+                            DownloadCollection downloadCollection = new();
+                            downloadItem.Status = "Completed";
+
+                            if (e.Error != null && !string.IsNullOrEmpty(e.Error.Message))
                             {
-                                if (string.IsNullOrEmpty(downloadItem.Path))
+                                if (e.Error.Message.Equals("A task was canceled."))
                                 {
-                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                    {
-                                        await ExDialog("Can't Find The File", "DownloadFileCompleted.IsOpenFolder");
-                                    }));
+                                    downloadItem.Status = "Pause";
                                 }
                                 else
                                 {
-                                    Process proc = new()
+                                    downloadItem.Status = "Error";
+
+                                    if (!string.IsNullOrEmpty(downloadItem.ExMessage))
                                     {
-                                        StartInfo = new ProcessStartInfo()
-                                        {
-                                            FileName = downloadItem.Path,
-                                            UseShellExecute = true
-                                        }
-                                    };
-                                    proc.Start();
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                {
-                                    await ExDialog(ex.Message, "DownloadFileCompleted.IsOpen");
-                                }));
-                            }
-                        }
-                        if (downloadItem.IsOpenFolder == true)
-                        {
-                            try
-                            {
-                                if (string.IsNullOrEmpty(downloadItem.Path))
-                                {
-                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
-                                    {
-                                        await ExDialog("Can't Find The Folder", "DownloadFileCompleted.IsOpenFolder");
-                                    }));
-                                }
-                                else
-                                {
-                                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                                    {
-                                        Process.Start(new ProcessStartInfo()
-                                        {
-                                            FileName = "explorer.exe",
-                                            Arguments = $"/select, \"{downloadItem.Path}\"",
-                                            UseShellExecute = true,
-                                            CreateNoWindow = true
-                                        });
+                                        downloadItem.ExMessage = $"{downloadItem.ExMessage} \nDownloadFileCompleted: {e.Error.Message}";
                                     }
-                                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                    else
                                     {
-                                        string directoryPath = Path.GetDirectoryName(downloadItem.Path);
-                                        var processStartInfo = new ProcessStartInfo
+                                        downloadItem.ExMessage = $"DownloadFileCompleted: {e.Error.Message}";
+                                    }
+                                }
+                            }
+
+                            downloadItem.ProgressPercentage = 100.0;
+
+                            _sourceCache.Refresh();
+                            downloadItem.Pack = CurrentDownloadService.Package;
+                            downloadCollection.DownloadItemInfo = DownloadItemToDownloadItemInfo(downloadItem);
+                            downloadCollection.DownloadService = CurrentDownloadService;
+                            DownloadCollections[downloadItem.FileName] = downloadCollection;
+
+                            _ = SaveAsync();
+
+                            if (downloadItem.IsOpen == true)
+                            {
+                                try
+                                {
+                                    if (string.IsNullOrEmpty(downloadItem.Path))
+                                    {
+                                        _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
                                         {
-                                            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "xdg-open" : "open",
-                                            Arguments = directoryPath,
-                                            UseShellExecute = true,
+                                            await ExDialog("Can't Find The File", "DownloadFileCompleted.IsOpenFolder");
+                                        }));
+                                    }
+                                    else
+                                    {
+                                        Process proc = new()
+                                        {
+                                            StartInfo = new ProcessStartInfo()
+                                            {
+                                                FileName = downloadItem.Path,
+                                                UseShellExecute = true
+                                            }
                                         };
-
-                                        Process.Start(processStartInfo);
+                                        proc.Start();
                                     }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                catch (Exception ex)
                                 {
-                                    await ExDialog(ex.Message, "DownloadFileCompleted.IsOpenFolder");
-                                }));
+                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                    {
+                                        await ExDialog(ex.Message, "DownloadFileCompleted.IsOpen");
+                                    }));
+                                }
+                            }
+                            if (downloadItem.IsOpenFolder == true)
+                            {
+                                try
+                                {
+                                    if (string.IsNullOrEmpty(downloadItem.Path))
+                                    {
+                                        _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                        {
+                                            await ExDialog("Can't Find The Folder", "DownloadFileCompleted.IsOpenFolder");
+                                        }));
+                                    }
+                                    else
+                                    {
+                                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                                        {
+                                            Process.Start(new ProcessStartInfo()
+                                            {
+                                                FileName = "explorer.exe",
+                                                Arguments = $"/select, \"{downloadItem.Path}\"",
+                                                UseShellExecute = true,
+                                                CreateNoWindow = true
+                                            });
+                                        }
+                                        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                        {
+                                            string directoryPath = Path.GetDirectoryName(downloadItem.Path);
+                                            var processStartInfo = new ProcessStartInfo
+                                            {
+                                                FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "xdg-open" : "open",
+                                                Arguments = directoryPath,
+                                                UseShellExecute = true,
+                                            };
 
+                                            Process.Start(processStartInfo);
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _ = Dispatcher.UIThread.InvokeAsync((Action)(async () =>
+                                    {
+                                        await ExDialog(ex.Message, "DownloadFileCompleted.IsOpenFolder");
+                                    }));
+
+                                }
                             }
                         }
+
                     };
 
                     await Task.Run(() =>
