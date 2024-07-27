@@ -887,57 +887,50 @@ namespace DownloaderUI.ViewModels
             HttpListener listener = new();
             listener.Prefixes.Add("http://localhost:5000/");
             listener.Start();
-            // TestMessage = "HTTP server is running, waiting for URL...";
+            TestMessage = "HTTP server is running, waiting for URL...";
 
             while (true)
             {
-                HttpListenerContext context = listener.GetContext();
-                HttpListenerRequest request = context.Request;
+                HttpListenerContext context = await listener.GetContextAsync();
+                _ = ProcessRequestAsync(context);
+            }
+        }
 
-                string url = request.QueryString["url"];
-                if (!string.IsNullOrEmpty(url))
+        private async Task ProcessRequestAsync(HttpListenerContext context)
+        {
+            HttpListenerRequest request = context.Request;
+
+            string url = request.QueryString["url"];
+            if (!string.IsNullOrEmpty(url))
+            {
+                TestMessage = "receieved URL: " + url;
+                using HttpClient httpClient = new();
+
+                DownloadItem downloadItem = new();
+
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+                try
                 {
-                    /// TestMessage = "receieved URL: " + url;
-                    using HttpClient httpClient = new();
+                    HttpResponseMessage response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
 
-                    DownloadItem downloadItem = new();
-
-                    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-                    try
+                    if (response.IsSuccessStatusCode)
                     {
-                        HttpResponseMessage response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
-
-                        if (response.IsSuccessStatusCode)
+                        if (!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
                         {
-                            if (!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
-                            {
-                                downloadItem.Id = Guid.NewGuid();
-                                string fileName = GetFileNameFromUrl(url);
-                                downloadItem.FileName = fileName;
-                                // TestMessage = fileName;
-                                downloadItem.Url = url;
-                                downloadItem.FolderPath = DownloadSettings.Instance.DefaultPath;
-                                DwonloadAsync(downloadItem);
-                            }
-
-                        }
-                        else
-                        {
-                            var dialog = new ContentDialog()
-                            {
-                                Title = $"Failed to retrieve information from {url}. Status code: {response.StatusCode}",
-                                PrimaryButtonText = "Ok",
-                                CloseButtonText = "Close"
-                            };
-
-                            var result = await dialog.ShowAsync();
+                            downloadItem.Id = Guid.NewGuid();
+                            string fileName = GetFileNameFromUrl(url);
+                            downloadItem.FileName = fileName;
+                            TestMessage = fileName;
+                            downloadItem.Url = url;
+                            downloadItem.FolderPath = DownloadSettings.Instance.DefaultPath;
+                            DwonloadAsync(downloadItem);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
                         var dialog = new ContentDialog()
                         {
-                            Title = $"An error occurred: {ex.Message}",
+                            Title = $"Failed to retrieve information from {url}. Status code: {response.StatusCode}",
                             PrimaryButtonText = "Ok",
                             CloseButtonText = "Close"
                         };
@@ -945,6 +938,18 @@ namespace DownloaderUI.ViewModels
                         var result = await dialog.ShowAsync();
                     }
                 }
+                catch (Exception ex)
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        Title = $"An error occurred: {ex.Message}",
+                        PrimaryButtonText = "Ok",
+                        CloseButtonText = "Close"
+                    };
+
+                    var result = await dialog.ShowAsync();
+                }
+                TestMessage = "HTTP server is running, waiting for URL...";
             }
         }
     }
