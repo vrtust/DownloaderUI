@@ -941,26 +941,33 @@ namespace DownloaderUI.ViewModels
                     }
                     else
                     {
-                        var dialog = new ContentDialog()
+                        await Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            Title = $"Failed to retrieve information from {url}. Status code: {response.StatusCode}",
-                            PrimaryButtonText = "Ok",
-                            CloseButtonText = "Close"
-                        };
+                            var dialog = new ContentDialog()
+                            {
+                                Title = $"Failed to retrieve information from {url}. Status code: {response.StatusCode}",
+                                PrimaryButtonText = "Ok",
+                                CloseButtonText = "Close"
+                            };
 
-                        var result = await dialog.ShowAsync();
+                            var result = dialog.ShowAsync();
+                        });
+                        
                     }
                 }
                 catch (Exception ex)
                 {
-                    var dialog = new ContentDialog()
+                    await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        Title = $"An error occurred: {ex.Message}",
-                        PrimaryButtonText = "Ok",
-                        CloseButtonText = "Close"
-                    };
+                        var dialog = new ContentDialog()
+                        {
+                            Title = $"An error occurred: {ex.Message}",
+                            PrimaryButtonText = "Ok",
+                            CloseButtonText = "Close"
+                        };
 
-                    var result = await dialog.ShowAsync();
+                        var result = dialog.ShowAsync();
+                    });
                 }
                 TestMessage = "HTTP server is running, waiting for URL...";
             }

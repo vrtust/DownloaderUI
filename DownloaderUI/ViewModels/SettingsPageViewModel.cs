@@ -168,7 +168,7 @@ namespace DownloaderUI.ViewModels
                         {
                             if (value != null)
                             {
-                                Application.Current.Resources["ControlContentThemeFontSize"] = FontSize;
+                                Application.Current.Resources["ControlContentThemeFontSize"] = (double)FontSize;
                             }
                             await SaveAsync();
                         }

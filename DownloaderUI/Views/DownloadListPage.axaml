@@ -44,7 +44,7 @@
 						</Grid>
 					</Button>
 					<TextBox Margin="10,0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="{DynamicResource My.Strings.SearchWatermark}" Width="250" />
-					<Button Content="{Binding TestMessage}"/>
+					<Button Content="{Binding TestMessage, Mode=OneWay}"/>
 				</StackPanel>
 
 				<DataGrid Grid.Row="1"
