@@ -26,8 +26,57 @@ browser.downloads.onCreated.addListener((downloadItem) => {
 });
 
 function isLikelyDownload(url) {
-  const downloadExtensions = ['.zip', '.pdf', '.exe', '.dmg', '.iso', '.mp3', '.mp4'];
-  return downloadExtensions.some(ext => url.toLowerCase().endsWith(ext));
+    const downloadExtensions = [
+        // Compressed and archived files
+        '.zip', '.rar', '.7z', '.tar', '.gz',
+
+        // Document and text files
+        '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
+
+        // Executable files
+        '.exe', '.msi', '.app', '.dmg',
+
+        // Image files
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.svg',
+
+        // Audio files
+        '.mp3', '.wav', '.aac', '.flac', '.ogg',
+
+        // Video files
+        '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv',
+
+        // Web files
+        '.html', '.htm', '.css', '.js',
+
+        // Spreadsheet and presentation files
+        '.xls', '.xlsx', '.ppt', '.pptx', '.csv',
+
+        // Programming and script files
+        '.py', '.java', '.cpp', '.c', '.cs', '.php', '.rb',
+
+        // System and configuration files
+        '.ini', '.cfg', '.dll', '.sys',
+
+        // Database files
+        '.db', '.sql', '.sqlite',
+
+        // Font files
+        '.ttf', '.otf', '.woff',
+
+        // Virtual machine and disk image files
+        '.iso', '.vhd', '.vmdk',
+
+        // E-book files
+        '.epub', '.mobi', '.azw',
+
+        // 3D and CAD files
+        '.obj', '.stl', '.dxf',
+
+        // Other
+        '.torrent', '.bak', '.tmp'
+    ];
+
+    return downloadExtensions.some(ext => url.toLowerCase().endsWith(ext));
 }
 
 
