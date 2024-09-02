@@ -26,7 +26,7 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<TextBlock Grid.Row="0" Padding="10,5,5,5" FontWeight="Bold" FontSize="18">DownloaderUI</TextBlock>
-		<ui:NavigationView x:Name="MainNavigation" PaneDisplayMode="Left" OpenPaneLength="175" Grid.Row="1" Grid.Column="0">
+		<ui:NavigationView x:Name="MainNavigation" PaneDisplayMode="Auto" OpenPaneLength="175" Grid.Row="1" Grid.Column="0">
 			<ui:NavigationView.MenuItems >
 				<ui:NavigationViewItem Content="{DynamicResource My.Strings.DownloadList}" Tag="DownloadListPage" IconSource="List" />
 			</ui:NavigationView.MenuItems>
