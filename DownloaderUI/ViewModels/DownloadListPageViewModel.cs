@@ -556,7 +556,7 @@ namespace DownloaderUI.ViewModels
                             downloadItem.BytesPerSecondSpeed = "0 MB/s";
                             downloadItem.ReceivedBytesSize = FormatBytesFromLong(e.ReceivedBytesSize);
                         }
-                        if (DateTime.Now - lastUpdate > TimeSpan.FromMilliseconds(200))
+                        if (DateTime.Now - lastUpdate > TimeSpan.FromMilliseconds(100))
                         {
                             downloadItem.ProgressPercentage = e.ProgressPercentage;
                             downloadItem.BytesPerSecondSpeed = FormatBytesFromDoubleWithSpeed(e.BytesPerSecondSpeed);
