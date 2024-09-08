@@ -2,8 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using DownloaderUI.ViewModels;
 using DownloaderUI.Views;
+using NLog;
+using NLog.Targets;
 using ReactiveUI;
 using System;
 using System.Reactive;
@@ -15,6 +16,8 @@ namespace DownloaderUI
     {
         public static ReactiveCommand<Unit, Unit> OpenMainWindowCommand { get; private set; }
         public static ReactiveCommand<Unit, Unit> ExitCommand { get; private set; }
+
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private static bool IsHidden = false;
         private static bool IsExit = false;
@@ -28,6 +31,24 @@ namespace DownloaderUI
 
         public override void OnFrameworkInitializationCompleted()
         {
+            // Initialize NLog
+            var config = new NLog.Config.LoggingConfiguration();
+
+            var logfile = new FileTarget("logfile")
+            {
+                FileName = "${basedir}/DownloadData/logfile.txt",
+                Layout = "${longdate} | ${level} | ${message}"
+            };
+
+            // Rules for mapping loggers to targets            
+            //config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+            // Apply config           
+            NLog.LogManager.Configuration = config;
+
+            logger.Info("DownloaderUI is starting");
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
@@ -46,6 +67,7 @@ namespace DownloaderUI
                     e.Cancel = true;
                 }
             };
+
         }
 
         public App()

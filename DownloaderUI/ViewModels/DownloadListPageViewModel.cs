@@ -111,9 +111,13 @@ namespace DownloaderUI.ViewModels
 
         public ReactiveCommand<Unit, Unit> DeleteFromFileCommand { get; }
 
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public DownloadListPageViewModel()
         {
             LoadAsync();
+
+            Logger.Debug("DownloadListPageViewModel is starting");
 
             NewLinkCommand = ReactiveCommand.CreateFromTask(NewLinkAsync);
             OpenCommand = ReactiveCommand.CreateFromTask(OpenAsync);
@@ -169,6 +173,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task ExDialog(string ex, string From)
         {
+            Logger.Debug($"ExDialog: Error is [{ex}] from [{ex}]");
             var dialog = new ContentDialog()
             {
                 Title = $"Error in {From}",
@@ -183,6 +188,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task OpenAsync()
         {
+            Logger.Debug($"OpenAsync: Open file [{SelectedDownloadItem.Path}]");
             try
             {
                 if (string.IsNullOrWhiteSpace(SelectedDownloadItem.Path))
@@ -210,6 +216,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task OpenFolderAsync()
         {
+            Logger.Debug($"OpenFolderAsync: Open folder [{SelectedDownloadItem.Path}]");
             try
             {
                 if (string.IsNullOrWhiteSpace(SelectedDownloadItem.Path))
@@ -247,6 +254,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task CopyExMessageAsync()
         {
+            Logger.Debug($"CopyExMessageAsync: Copy ExMessage [{SelectedDownloadItem.ExMessage}]");
             try
             {
                 var clipboard = App.MainWindow.Clipboard;
@@ -263,6 +271,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task DeleteFromFileAsync()
         {
+            Logger.Debug($"DeleteFromFileAsync: Delete file [{SelectedDownloadItem.Path}] from file");
             try
             {
                 await PauseAsync();
@@ -277,6 +286,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task DeleteFromListAsync()
         {
+            Logger.Debug($"DeleteFromFileAsync: Delete file [{SelectedDownloadItem.FileName}] from list");
             try
             {
                 DownloadCollections.Remove(SelectedDownloadItem.FileName);
@@ -293,6 +303,7 @@ namespace DownloaderUI.ViewModels
 
         private async Task DeleteAsync()
         {
+            Logger.Debug($"DeleteFromFileAsync: Delete file [{SelectedDownloadItem.FileName}] from file and list");
             try
             {
                 await DeleteFromFileAsync();
@@ -313,6 +324,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task CopyNameAsync()
         {
+            Logger.Debug($"CopyNameAsync: Copy name [{SelectedDownloadItem.FileName}]");
             try
             {
                 var clipboard = App.MainWindow.Clipboard;
@@ -329,6 +341,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task CopyPathAsync()
         {
+            Logger.Debug($"CopyPathAsync: Copy path [{SelectedDownloadItem.FileName}]");
             try
             {
                 var clipboard = App.MainWindow.Clipboard;
@@ -345,6 +358,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task CopyUrlAsync()
         {
+            Logger.Debug($"CopyPathAsync: Copy url [{SelectedDownloadItem.Url}]");
             try
             {
                 var clipboard = App.MainWindow.Clipboard;
@@ -361,6 +375,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task NewLinkAsync()
         {
+            Logger.Debug($"NewLinkAsync: New window to add download link");
             DownloadItem downloadItem = new();
 
             var newWindow = new Window
@@ -378,6 +393,7 @@ namespace DownloaderUI.ViewModels
 
             _ = MessageBus.Current.Listen<DownloadFileAddedMessage>().Subscribe((Action<DownloadFileAddedMessage>)(async message =>
             {
+                Logger.Debug($"NewLinkAsync: Get dowload item from new window");
                 downloadItem = message.DownloadItem;
 
                 newWindow.Close();
@@ -395,11 +411,14 @@ namespace DownloaderUI.ViewModels
             Uri uri = new(url);
             string fileName = Path.GetFileName(uri.LocalPath);
 
+            Logger.Debug($"GetFileNameFromUrl: From [{uri.LocalPath}] to [{fileName}]");
+
             return fileName;
         }
 
         public async Task DwonloadAsync(DownloadItem downloadItem)
         {
+            Logger.Debug($"DwonloadAsync: Dwonload start");
             if (downloadItem != null)
             {
                 if (Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
@@ -411,10 +430,13 @@ namespace DownloaderUI.ViewModels
                         CloseButtonText = "Close"
                     };
 
+                    Logger.Debug($"DwonloadAsync: {downloadItem.FileName} is already existed!");
+
                     await dialog.ShowAsync();
                 }
                 else
                 {
+                    Logger.Debug($"DwonloadAsync: Get download configuration");
                     long MaximumBytesPerSecond = 0;
                     switch (DownloadSettings.Instance.UnitForMaximumBytesPerSecond)
                     {
@@ -504,8 +526,11 @@ namespace DownloaderUI.ViewModels
 
                     DownloadService CurrentDownloadService = new(downloadOpt);
 
+                    Logger.Debug($"DwonloadAsync: Apply configuration");
+
                     CurrentDownloadService.DownloadStarted += (s, e) =>
                     {
+                        Logger.Debug($"DwonloadAsync: DownloadStarted");
                         downloadItem.FileName = GetFileNameFromUrl(e.FileName);
                         downloadItem.Path = e.FileName;
                         downloadItem.FileSize = FormatBytesFromDouble(e.TotalBytesToReceive);
@@ -517,6 +542,7 @@ namespace DownloaderUI.ViewModels
 
                         Dispatcher.UIThread.InvokeAsync((Action)(async () =>
                         {
+                            Logger.Debug($"DwonloadAsync: Update download item info in UI");
                             try
                             {
                                 if (!Enumerable.Any<DownloadItem>(this.DownloadList, (Func<DownloadItem, bool>)(df => df.FileName == downloadItem.FileName)))
@@ -567,7 +593,8 @@ namespace DownloaderUI.ViewModels
 
                     CurrentDownloadService.DownloadFileCompleted += async (s, e) =>
                     {
-                        if (downloadItem.Status.Equals("Pause")){
+                        if (downloadItem.Status.Equals("Pause"))
+                        {
                             _sourceCache.Refresh();
                             DownloadCollection downloadCollection = new();
                             downloadItem.Pack = CurrentDownloadService.Package;
@@ -575,6 +602,7 @@ namespace DownloaderUI.ViewModels
                             downloadCollection.DownloadService = CurrentDownloadService;
                             DownloadCollections[downloadItem.FileName] = downloadCollection;
                             _ = SaveAsync();
+                            Logger.Debug($"DwonloadAsync: Pause [{downloadItem.FileName}]");
                         }
                         else
                         {
@@ -586,6 +614,7 @@ namespace DownloaderUI.ViewModels
                                 if (e.Error.Message.Equals("A task was canceled."))
                                 {
                                     downloadItem.Status = "Pause";
+                                    Logger.Debug($"DwonloadAsync: Pause and cancel [{downloadItem.FileName}]");
                                 }
                                 else
                                 {
@@ -599,8 +628,11 @@ namespace DownloaderUI.ViewModels
                                     {
                                         downloadItem.ExMessage = $"DownloadFileCompleted: {e.Error.Message}";
                                     }
+                                    Logger.Debug($"DwonloadAsync: [{downloadItem.FileName}] error with [{e.Error.Message}]");
                                 }
                             }
+
+                            Logger.Debug($"DwonloadAsync: [{downloadItem.FileName}] downlaod complete");
 
                             downloadItem.ProgressPercentage = 100.0;
 
@@ -614,6 +646,7 @@ namespace DownloaderUI.ViewModels
 
                             if (downloadItem.IsOpen == true)
                             {
+                                Logger.Debug($"DwonloadAsync: try to open file [{downloadItem.FileName}]");
                                 try
                                 {
                                     if (string.IsNullOrEmpty(downloadItem.Path))
@@ -646,6 +679,7 @@ namespace DownloaderUI.ViewModels
                             }
                             if (downloadItem.IsOpenFolder == true)
                             {
+                                Logger.Debug($"DwonloadAsync: try to open folder [{downloadItem.FileName}]");
                                 try
                                 {
                                     if (string.IsNullOrEmpty(downloadItem.Path))
@@ -705,6 +739,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task SaveAsync()
         {
+            Logger.Debug($"SaveAsync: save DownloadCollections");
             string DataPath;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -727,6 +762,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task LoadAsync()
         {
+            Logger.Debug($"LoadAsync: load DownloadCollections");
             string DataPath;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -821,6 +857,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task PauseAsync()
         {
+            Logger.Debug($"PauseAsync: Pause [{SelectedDownloadItem.FileName}]");
             try
             {
                 if (DownloadCollections.TryGetValue(SelectedDownloadItem.FileName, out var downloadCollection) && SelectedDownloadItem.Status != "Pause")
@@ -843,6 +880,7 @@ namespace DownloaderUI.ViewModels
 
         public async Task ResumeAsync()
         {
+            Logger.Debug($"ResumeAsync: Resume [{SelectedDownloadItem.FileName}]");
             try
             {
                 if (DownloadCollections.TryGetValue(SelectedDownloadItem.FileName, out var downloadCollection) && SelectedDownloadItem.Status != "Downloading")
@@ -886,6 +924,7 @@ namespace DownloaderUI.ViewModels
 
         public long GetFreeSpace(string path)
         {
+            Logger.Debug($"GetFreeSpace: try to get free space");
             string root = Path.GetPathRoot(path);
 
             DriveInfo drive = new(root);
@@ -897,6 +936,7 @@ namespace DownloaderUI.ViewModels
         /// </summary>
         public async Task ExtensionServer()
         {
+            Logger.Debug($"ExtensionServer: Add host http://localhost:5000/");
             HttpListener listener = new();
             listener.Prefixes.Add("http://localhost:5000/");
             listener.Start();
@@ -914,6 +954,9 @@ namespace DownloaderUI.ViewModels
             HttpListenerRequest request = context.Request;
 
             string url = request.QueryString["url"];
+
+            Logger.Debug($"ProcessRequestAsync: Solve url [{url}] from extension");
+
             if (!string.IsNullOrEmpty(url))
             {
                 TestMessage = "receieved URL: " + url;
@@ -952,7 +995,7 @@ namespace DownloaderUI.ViewModels
 
                             var result = dialog.ShowAsync();
                         });
-                        
+
                     }
                 }
                 catch (Exception ex)
