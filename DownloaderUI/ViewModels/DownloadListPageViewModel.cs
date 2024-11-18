@@ -962,7 +962,10 @@ namespace DownloaderUI.ViewModels
                 TestMessage = "receieved URL: " + url;
                 using HttpClient httpClient = new();
 
-                DownloadItem downloadItem = new();
+                DownloadItem downloadItem = new()
+                {
+                    Id = Guid.NewGuid()
+                };
 
                 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
                 try
@@ -973,12 +976,14 @@ namespace DownloaderUI.ViewModels
                     {
                         if (!string.IsNullOrEmpty(DownloadSettings.Instance.DefaultPath))
                         {
-                            downloadItem.Id = Guid.NewGuid();
+                            //downloadItem.Id = Guid.NewGuid();
                             string fileName = GetFileNameFromUrl(url);
                             downloadItem.FileName = fileName;
                             TestMessage = fileName;
                             downloadItem.Url = url;
                             downloadItem.FolderPath = DownloadSettings.Instance.DefaultPath;
+                            downloadItem.IsOpen = DownloadSettings.Instance.IsOpenFile;
+                            downloadItem.IsOpenFolder = DownloadSettings.Instance.IsOpenFolder;
                             DwonloadAsync(downloadItem);
                         }
                     }
